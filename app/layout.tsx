@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
@@ -12,17 +12,21 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+// ✅ Move themeColor to viewport
+export const viewport: Viewport = {
+  themeColor: "#000000",
+};
+
 export const metadata: Metadata = {
   title: "Bright Minds Lab",
   description: "A Next.js PWA App",
-  manifest: "/manifest.json", // ✅ Add manifest file
-  themeColor: "#000000", // ✅ Required for PWA
+  manifest: "/manifest.json", // ✅ Ensure this file exists
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
   },
   icons: {
-    apple: "./logoo.png",
+    apple: "/logoo.png", // ✅ Ensure this path is correct
   },
 };
 
