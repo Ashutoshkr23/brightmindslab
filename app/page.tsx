@@ -18,7 +18,7 @@ export default function Home() {
       <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
       <main className="h-screen flex flex-col items-center justify-center bg-gray-90">
       {/* Hero Section */}
-      <section className="text-center w-64 pt-40 py-12 px-4">
+      <section className="text-center mt-40 w-64 pt-40 py-12 px-4">
         {/* Logo */}
         <img
           src="/Hero.jpg"
