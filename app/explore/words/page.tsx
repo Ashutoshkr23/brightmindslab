@@ -1,7 +1,7 @@
 
 "use client"
 import { useState } from "react";
-import { motion, useAnimation } from "framer-motion";
+import { motion, } from "framer-motion";
 import { PanInfo } from "framer-motion";
 
 const sampleNotes = [
