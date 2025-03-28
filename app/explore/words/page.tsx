@@ -16,7 +16,7 @@ export default function NotesPage() {
   const [notes, setNotes] = useState(sampleNotes);
   const [swipeDirection, setSwipeDirection] = useState("");
 
-  const controls = useAnimation();
+  
 
   const handleDragEnd = (event: MouseEvent | TouchEvent, info: PanInfo, id: number) => {
     const offsetX = info.offset.x;
