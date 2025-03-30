@@ -11,7 +11,7 @@ const sampleNotes = [
 ];
 
 export default function NotesPage() {
-  const [notes] = useState(sampleNotes);
+  const [notes, setNotes] = useState(sampleNotes);
   const [selectedNote, setSelectedNote] = useState<null | (typeof sampleNotes)[0]>(null);
   const pathname = usePathname(); // Get current page URL
 
@@ -25,15 +25,17 @@ export default function NotesPage() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center bg-green min-h-screen bg-gray-100">
-      <div className="relative w-full h-screen">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4">
+      <h1 className="text-2xl font-bold mb-4">Swipeable Notes</h1>
+
+      <div className="relative w-full max-w-md h-96">
         {notes.map((note) => (
           <motion.div
             key={note.id}
             drag="y"
             dragConstraints={{ top: 0, bottom: 0 }}
             onDragEnd={() => handleSwipe(note)}
-            className="absolute w-full h-screen bg-white shadow-md rounded-lg p-4 text-center"
+            className="absolute w-full bg-white shadow-md rounded-lg p-4 text-center"
             whileTap={{ scale: 1.1 }}
           >
             <h2 className="text-xl font-semibold">{note.title}</h2>
