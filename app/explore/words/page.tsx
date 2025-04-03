@@ -19,6 +19,7 @@ export default function NotesPage() {
   useEffect(() => {
     setSelectedNote(null);
   }, [pathname]);
+  console.log(setNotes)
 
   const handleSwipe = (note: (typeof sampleNotes)[0]) => {
     setSelectedNote(note);
