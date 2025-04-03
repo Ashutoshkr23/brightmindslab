@@ -175,7 +175,7 @@ export default function NotesPage() {
         ) : (
           <div className="w-full h-screen flex flex-col items-center justify-center bg-white shadow-lg rounded-lg p-4">
             <h2 className="text-2xl font-bold">Lesson Over 🎉</h2>
-            <p className="text-gray-600">You've reviewed all the selected topics.</p>
+            <p className="text-gray-600">You&apos;ve reviewed all the selected topics.</p>
           </div>
         )
       ) : null}

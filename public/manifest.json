@@ -1,6 +1,6 @@
 {
-    "name": "My Next.js PWA",
-    "short_name": "NextPWA",
+    "name": "BrightMinds lab",
+    "short_name": "BrightMinds",
     "start_url": "/",
     "orientation": "portrait",
     "display": "standalone",
