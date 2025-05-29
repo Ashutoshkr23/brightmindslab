@@ -11,6 +11,7 @@ type Question = {
 export default function QuizPage() {
   const searchParams = useSearchParams();
   const day = searchParams.get('day');
+  console.log("day")
   
   // States
   const [questions, setQuestions] = useState<Question[]>([]);
