@@ -145,6 +145,7 @@ function generateQuestionsForDay(day: number): Question[] {
   // Generate 20 questions from first two addition approaches (randomly mixed)
   const addQuestions: Question[] = [];
   for (let i = 0; i < 20; i++) {
+    console.log("day")
     if (Math.random() < 0.5) {
       // Approach 1: 50, 60, or 70 + 1 digit
       const base = [50, 60, 70][Math.floor(Math.random() * 3)];
