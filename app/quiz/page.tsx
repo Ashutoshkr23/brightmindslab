@@ -1,34 +1,34 @@
 "use client";
 import React, { useState } from "react";
 
-// Moved generateNumbersAndSum here
 const generateNumbersAndSum = (): [number, number, number, string] => {
-  const operators = ["+", "-", "*"];
-  const operator = operators[Math.floor(Math.random() * operators.length)];
-  let num1 = Math.floor(Math.random() * 90 + 10); // 10 to 99
-  let num2 = Math.floor(Math.random() * 90 + 10);
-
-  // Make sure subtraction doesn't go negative
-  if (operator === "-" && num2 > num1) {
-    [num1, num2] = [num2, num1];
-  } else if (operator === "*") {
-    // For multiplication, use smaller numbers
-    num1 = Math.floor(Math.random() * 10 + 1);
-    num2 = Math.floor(Math.random() * 10 + 1);
-  }
-
+  const caseNumber = Math.floor(Math.random() * 3) + 1;
+  let num1 = 0;
+  let num2 = 0;
+  let operator = "";
   let sum = 0;
-  switch (operator) {
-    case "+":
+
+  switch (caseNumber) {
+    case 1:
+      num1 = Math.floor(Math.random() * 9) + 1;
+      num2 = Math.floor(Math.random() * 9) + 1;
+      operator = "+";
       sum = num1 + num2;
       break;
-    case "-":
-      sum = num1 - num2;
+    case 2:
+      num1 = Math.floor(Math.random() * 9) + 1;
+      num2 = (Math.floor(Math.random() * 9) + 1) * 10;
+      operator = "+";
+      sum = num1 + num2;
       break;
-    case "*":
+    case 3:
+      num1 = Math.floor(Math.random() * 9) + 1;
+      num2 = Math.floor(Math.random() * 5) + 1;
+      operator = "*";
       sum = num1 * num2;
       break;
   }
+
   return [num1, num2, sum, operator];
 };
 
@@ -39,9 +39,8 @@ const Test: React.FC = () => {
   const [startTime, setStartTime] = useState<number | null>(null);
   const [endTime, setEndTime] = useState<number | null>(null);
   const [gameOver, setGameOver] = useState(false);
-  const [enteredAnswer, setEnteredAnswer] = useState<number | null>(null);
-  const [number1, setNumber1] = useState<number | null>(null);
   const [tempAnswer, setTempAnswer] = useState<number | null>(null);
+  const [number1, setNumber1] = useState<number | null>(null);
   const [number2, setNumber2] = useState<number | null>(null);
   const [operators, setOperators] = useState<string | null>(null);
   const [result, setResult] = useState<number | null>(null);
@@ -61,23 +60,17 @@ const Test: React.FC = () => {
     const inputValue = parseInt(e.target.value);
     setTempAnswer(inputValue);
     if (result === null) return;
-    const inputLength = String(inputValue).length;
-    const sumLength = String(result).length;
-    if (inputLength === sumLength) {
-      setEnteredAnswer(inputValue);
+    if (String(inputValue).length === String(result).length) {
       handleAnswer(inputValue, result);
-      console.log("handle answer called");
-      console.log(inputValue);
     }
   };
 
   const handleAnswer = (input: number | null, result: number | null) => {
-    setEnteredAnswer(input);
     if (input === result) {
-      setScore(score + 1);
+      setScore((prev) => prev + 1);
     }
     if (questionNumber < 60) {
-      setQuestionNumber(questionNumber + 1);
+      setQuestionNumber((prev) => prev + 1);
       const [num1, num2, sum, operator] = generateNumbersAndSum();
       setNumber1(num1);
       setNumber2(num2);
@@ -86,7 +79,6 @@ const Test: React.FC = () => {
       setTempAnswer(null);
     } else {
       setGameOver(true);
-      setTempAnswer(null);
       setEndTime(Date.now());
     }
   };
@@ -98,7 +90,6 @@ const Test: React.FC = () => {
     setStartTime(null);
     setEndTime(null);
     setGameOver(false);
-    setEnteredAnswer(null);
     setTempAnswer(null);
     setNumber1(null);
     setNumber2(null);
@@ -109,53 +100,52 @@ const Test: React.FC = () => {
   if (!started) {
     return (
       <button
-        className="h-10 bg-Dark-blue px-10 w-40 py-2 rounded-2xl mx-auto flex justify-center items-center"
+        className="h-12 px-12 rounded-2xl mx-auto flex justify-center items-center bg-Dark-blue hover:bg-Dark-blue/80 transition-colors duration-300"
         onClick={handleStart}
       >
-        <p className="text-Black text-3xl"> Start </p>
+        <p className="text-Black text-3xl font-semibold select-none">Start</p>
       </button>
     );
   }
 
   if (gameOver) {
-    const timeTaken = endTime && startTime ? (endTime - startTime) / 1000 : 0;
+    const timeTaken = endTime && startTime ? ((endTime - startTime) / 1000).toFixed(2) : "0";
     return (
       <div className="flex flex-col gap-6 justify-center items-center">
-        <p className="text-3xl">
-          Score: {score}/60
+        <p className="text-3xl font-semibold text-Dark-blue">
+          Score: {score} / 60
         </p>
-        <p className="text-3xl">
+        <p className="text-3xl font-semibold text-Dark-blue">
           Time taken: {timeTaken} seconds
         </p>
         <button
-          className="h-10 bg-Dark-blue px-10 w-40 py-2 rounded-2xl mx-auto flex justify-center items-center"
+          className="h-12 px-12 rounded-2xl mx-auto flex justify-center items-center bg-Dark-blue hover:bg-Dark-blue/80 transition-colors duration-300"
           onClick={handleRetry}
         >
-          <p className="text-Black text-3xl"> Retry </p>
+          <p className="text-Black text-3xl font-semibold select-none">Retry</p>
         </button>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col items-center justify-center">
-      <p className="text-4xl">Question {questionNumber}/60:</p>
-      <div className="flex gap-4">
-        <p className="text-4xl mt-4">
+    <div className="flex flex-col items-center justify-center gap-8 p-4">
+      <p className="text-4xl font-bold text-Dark-blue">Question {questionNumber} / 60:</p>
+      <div className="flex gap-6 items-center">
+        <p className="text-4xl font-semibold text-Black select-none">
           {number1} {operators} {number2} = ?
         </p>
         <input
-          className="text-Black mt-4 text-4xl rounded w-20 border-black border"
+          className="text-Black text-4xl rounded border-2 border-Dark-blue w-24 text-center focus:outline-none focus:ring-4 focus:ring-Dark-blue/50 transition"
           type="number"
           value={tempAnswer === null ? "" : tempAnswer}
           onChange={handleChange}
           autoFocus
+          inputMode="numeric"
         />
       </div>
-      <p></p>
     </div>
   );
 };
 
 export default Test;
-
