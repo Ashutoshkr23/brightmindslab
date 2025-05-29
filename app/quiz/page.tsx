@@ -137,6 +137,7 @@ export default function QuizPage() {
 
 // Helper to generate the full question set for a day
 function generateQuestionsForDay(day: number): Question[] {
+    console.log("day", day);
   // For example purposes, day 1 has 3 concept types:
   // 1. Addition of two-digit number (50,60,70) + 1-digit number (random)
   // 2. Addition of any 1-digit number + 1-digit number
