@@ -18,15 +18,16 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
 
+  // Listen for auth changes and load profile if signed in
   useEffect(() => {
     const unsub = auth.onAuthStateChanged(async (user) => {
       if (!user) {
-        // Guest flow
+        // Guest user
         setUserProfile(null);
         setLoading(false);
         return;
       }
-      // Signed-in flow
+      // Signed-in: fetch Firestore profile
       const snap = await getDoc(doc(db, 'users', user.uid));
       if (snap.exists()) {
         setUserProfile(snap.data() as UserProfile);
@@ -36,6 +37,7 @@ export default function DashboardPage() {
       }
       setLoading(false);
     });
+
     return () => unsub();
   }, [router]);
 
@@ -48,19 +50,18 @@ export default function DashboardPage() {
   }
 
   const isGuest = userProfile === null;
-  const isStudent = userProfile?.userType === 'student' || isGuest;
+  const isStudent = isGuest || userProfile?.userType === 'student';
   const isCompetitive = userProfile?.userType === 'competitive';
 
-  const handleCardClick = (path: string) => {
-    if (isGuest) {
-      router.push('/login');
-    } else {
-      router.push(path);
-    }
+  // Navigate or prompt login for guests
+  const goTo = (path: string) => {
+    if (isGuest) router.push('/login');
+    else router.push(path);
   };
 
   return (
     <div className="min-h-screen bg-background text-white p-6 font-sans">
+      {/* Header */}
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-2xl font-heading">
           {isGuest ? 'Welcome, Guest!' : `Welcome, ${userProfile!.name}!`}
@@ -78,8 +79,9 @@ export default function DashboardPage() {
         )}
       </div>
 
+      {/* Profile Summary for signed-in users */}
       {!isGuest && (
-        <div className="p-4 bg-dark rounded-2xl shadow-card mb-6">
+        <div className="p-4 bg-surface rounded-2xl shadow-card mb-6">
           <p>
             <strong>Type:</strong>{' '}
             {userProfile!.userType === 'student'
@@ -92,37 +94,60 @@ export default function DashboardPage() {
         </div>
       )}
 
+      {/* Module Cards */}
       <div className="grid gap-4 md:grid-cols-2">
-        {/* School Vocabulary for Guests & Students */}
+        {/* Vocabulary */}
         {isStudent && (
-          <div className="p-4 bg-dark rounded-2xl shadow-card">
-            <h2 className="text-xl mb-2">School Vocabulary</h2>
+          <div className="p-4 bg-surface rounded-2xl shadow-card">
+            <h2 className="text-xl mb-2">Vocabulary</h2>
             <p>
               {isGuest
-                ? 'Sign in to access class-based vocabulary'
-                : `Class ${userProfile!.class} vocab menu`}
+                ? 'Sign in to explore high-frequency & chapter vocab'
+                : `Explore high-frequency & chapter vocab`}
             </p>
             <button
-              onClick={() =>
-                handleCardClick(`/vocab/class/${isGuest ? '6' : userProfile!.class}`)
-              }
-              className="mt-4 bg-primary py-2 px-4 rounded-2xl text-black"
+              onClick={() => goTo(`/vocab/class/${isGuest ? '6' : userProfile!.class}`)}
+              className="mt-4 bg-primary py-2 px-4 rounded-2xl text-black w-full"
             >
-              {isGuest ? 'Log In to Learn' : 'Start Learning'}
+              {isGuest ? 'Log In to Learn' : 'Enter'}
             </button>
           </div>
         )}
 
-        {/* Competitive Vocabulary only for Competitive Aspirants */}
+        {/* English Skills */}
+        <div className="p-4 bg-surface rounded-2xl shadow-card">
+          <h2 className="text-xl mb-2">English Skills</h2>
+          <p>Mini-courses on grammar, writing & more</p>
+          <button
+            onClick={() => goTo('/english')}
+            className="mt-4 bg-primary py-2 px-4 rounded-2xl text-white w-full"
+          >
+            {isGuest ? 'Log In to Access' : 'Enter'}
+          </button>
+        </div>
+
+        {/* Revision Notes */}
+        <div className="p-4 bg-surface rounded-2xl shadow-card">
+          <h2 className="text-xl mb-2">Revision Notes</h2>
+          <p>Subject-wise quick revision cards</p>
+          <button
+            onClick={() => goTo('/notes')}
+            className="mt-4 bg-primary py-2 px-4 rounded-2xl text-black w-full"
+          >
+            {isGuest ? 'Log In to Access' : 'Enter'}
+          </button>
+        </div>
+
+        {/* Competitive Vocabulary (only for competitive aspirants) */}
         {isCompetitive && (
-          <div className="p-4 bg-dark rounded-2xl shadow-card">
+          <div className="p-4 bg-surface rounded-2xl shadow-card">
             <h2 className="text-xl mb-2">Competitive Vocabulary</h2>
-            <p>Synonyms, Idioms & more</p>
+            <p>Synonyms, idioms & exam-focused vocab</p>
             <button
-              onClick={() => handleCardClick('/vocab/competitive/synonyms')}
-              className="mt-4 bg-secondary py-2 px-4 rounded-2xl text-white"
+              onClick={() => goTo('/vocab/competitive/synonyms')}
+              className="mt-4 bg-secondary py-2 px-4 rounded-2xl text-white w-full"
             >
-              Start Learning
+              Enter
             </button>
           </div>
         )}
