@@ -140,7 +140,7 @@ const Test: React.FC = () => {
         </p>
         <input
           type="number"
-          className="text-Black text-4xl rounded border-2 border-Dark-blue w-24 text-center focus:outline-none focus:ring-4 focus:ring-Dark-blue/50 transition"
+          className="text-black text-4xl rounded border-2 border-Dark-blue w-24 text-center focus:outline-none focus:ring-4 focus:ring-Dark-blue/50 transition"
           value={tempAnswer ?? ""}
           onChange={handleChange}
           autoFocus
