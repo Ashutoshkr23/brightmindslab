@@ -3,10 +3,7 @@ import React, { useState } from "react";
 
 const generateNumbersAndSum = (): [number, number, number, string] => {
   const caseNumber = Math.floor(Math.random() * 3) + 1;
-  let num1 = 0;
-  let num2 = 0;
-  let operator = "";
-  let sum = 0;
+  let num1 = 0, num2 = 0, operator = "", sum = 0;
 
   switch (caseNumber) {
     case 1:
@@ -24,7 +21,7 @@ const generateNumbersAndSum = (): [number, number, number, string] => {
     case 3:
       num1 = Math.floor(Math.random() * 9) + 1;
       num2 = Math.floor(Math.random() * 5) + 1;
-      operator = "*";
+      operator = "×";
       sum = num1 * num2;
       break;
   }
@@ -42,22 +39,23 @@ const Test: React.FC = () => {
   const [tempAnswer, setTempAnswer] = useState<number | null>(null);
   const [number1, setNumber1] = useState<number | null>(null);
   const [number2, setNumber2] = useState<number | null>(null);
-  const [operators, setOperators] = useState<string | null>(null);
+  const [operator, setOperator] = useState<string | null>(null);
   const [result, setResult] = useState<number | null>(null);
 
   const handleStart = () => {
     setStarted(true);
     setStartTime(Date.now());
     setQuestionNumber(1);
-    const [num1, num2, sum, operator] = generateNumbersAndSum();
+    const [num1, num2, sum, op] = generateNumbersAndSum();
     setNumber1(num1);
     setNumber2(num2);
-    setOperators(operator);
+    setOperator(op);
     setResult(sum);
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const inputValue = parseInt(e.target.value);
+    if (isNaN(inputValue)) return;
     setTempAnswer(inputValue);
     if (result === null) return;
     if (String(inputValue).length === String(result).length) {
@@ -66,15 +64,13 @@ const Test: React.FC = () => {
   };
 
   const handleAnswer = (input: number | null, result: number | null) => {
-    if (input === result) {
-      setScore((prev) => prev + 1);
-    }
+    if (input === result) setScore((prev) => prev + 1);
     if (questionNumber < 60) {
       setQuestionNumber((prev) => prev + 1);
-      const [num1, num2, sum, operator] = generateNumbersAndSum();
+      const [num1, num2, sum, op] = generateNumbersAndSum();
       setNumber1(num1);
       setNumber2(num2);
-      setOperators(operator);
+      setOperator(op);
       setResult(sum);
       setTempAnswer(null);
     } else {
@@ -93,59 +89,57 @@ const Test: React.FC = () => {
     setTempAnswer(null);
     setNumber1(null);
     setNumber2(null);
-    setOperators(null);
+    setOperator(null);
     setResult(null);
   };
 
-  if (!started) {
-    return (
-      <button
-        className="h-12 px-12 rounded-2xl mx-auto flex justify-center items-center bg-Dark-blue hover:bg-Dark-blue/80 transition-colors duration-300"
-        onClick={handleStart}
-      >
-        <p className="text-Black text-3xl font-semibold select-none">Start</p>
-      </button>
-    );
-  }
-
-  if (gameOver) {
-    const timeTaken = endTime && startTime ? ((endTime - startTime) / 1000).toFixed(2) : "0";
-    return (
-      <div className="flex flex-col gap-6 justify-center items-center">
-        <p className="text-3xl font-semibold text-Dark-blue">
-          Score: {score} / 60
-        </p>
-        <p className="text-3xl font-semibold text-Dark-blue">
-          Time taken: {timeTaken} seconds
-        </p>
-        <button
-          className="h-12 px-12 rounded-2xl mx-auto flex justify-center items-center bg-Dark-blue hover:bg-Dark-blue/80 transition-colors duration-300"
-          onClick={handleRetry}
-        >
-          <p className="text-Black text-3xl font-semibold select-none">Retry</p>
-        </button>
-      </div>
-    );
-  }
+  const timeTaken = endTime && startTime ? ((endTime - startTime) / 1000).toFixed(2) : "0";
 
   return (
-    <div className="flex flex-col items-center justify-center gap-8 p-4">
-      <p className="text-4xl font-bold text-Dark-blue">Question {questionNumber} / 60:</p>
-      <div className="flex gap-6 items-center">
-        <p className="text-4xl font-semibold text-Black select-none">
-          {number1} {operators} {number2} = ?
-        </p>
-        <input
-          className="text-Black text-4xl rounded border-2 border-Dark-blue w-24 text-center focus:outline-none focus:ring-4 focus:ring-Dark-blue/50 transition"
-          type="number"
-          value={tempAnswer === null ? "" : tempAnswer}
-          onChange={handleChange}
-          autoFocus
-          inputMode="numeric"
-        />
-      </div>
+    <div className="flex flex-col items-center justify-center min-h-screen px-4 py-8 text-center bg-background">
+      {!started ? (
+        <button
+          className="bg-Dark-blue hover:bg-Dark-blue/80 text-Black text-3xl font-bold px-10 py-4 rounded-2xl transition-colors duration-300"
+          onClick={handleStart}
+        >
+          Start 60-Second Challenge
+        </button>
+      ) : gameOver ? (
+        <div className="space-y-6">
+          <h2 className="text-4xl font-extrabold text-Dark-blue">🧠 Mental Maths Mastery</h2>
+          <p className="text-3xl text-Black font-semibold">Score: {score} / 60</p>
+          <p className="text-2xl text-Black">⏱️ Time taken: {timeTaken} seconds</p>
+          <button
+            onClick={handleRetry}
+            className="mt-4 bg-Dark-blue text-Black text-xl font-semibold px-8 py-3 rounded-xl hover:bg-Dark-blue/80 transition"
+          >
+            Retry Challenge
+          </button>
+        </div>
+      ) : (
+        <div className="flex flex-col items-center space-y-8">
+          <h2 className="text-3xl font-bold text-Dark-blue">
+            Question {questionNumber} of 60
+          </h2>
+          <div className="flex items-center gap-6">
+            <p className="text-4xl font-semibold text-Black select-none">
+              {number1} {operator} {number2} = ?
+            </p>
+            <input
+              type="number"
+              inputMode="numeric"
+              autoFocus
+              autoComplete="off"
+              className="text-4xl text-black text-center w-24 rounded border-2 border-Dark-blue focus:outline-none focus:ring-4 focus:ring-Dark-blue/50 transition"
+              value={tempAnswer === null ? "" : tempAnswer}
+              onChange={handleChange}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
 export default Test;
+
