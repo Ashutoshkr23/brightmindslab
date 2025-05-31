@@ -1,9 +1,10 @@
+'use client'
 import React, { Suspense } from "react";
-import QuizClient from "./Quizclient.tsx/page";
 
+import QuizClient from "@/Components/QuizClient";
 export default function QuizPage() {
   return (
-    <Suspense fallback={<div className="text-center p-4">Loading...</div>}>
+    <Suspense fallback={<div>Loading...</div>}>
       <QuizClient />
     </Suspense>
   );
