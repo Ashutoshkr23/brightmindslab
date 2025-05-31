@@ -1,54 +1,69 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { getGeneratorForDay } from "@/lib/dayGenerators";
+import { getGeneratorsForDay, QuestionGenerator } from "@/lib/dayGenerators";
 
-type QuestionGenerator = () => [number, number, number, string];
+const QUESTIONS_PER_APPROACH = 20;
 
 const Test: React.FC = () => {
   const searchParams = useSearchParams();
   const dayParam = searchParams.get("day");
   const day = dayParam && !isNaN(Number(dayParam)) ? parseInt(dayParam, 10) : 1;
 
-  const [generator, setGenerator] = useState<QuestionGenerator | null>(null);
+  const [generators, setGenerators] = useState<QuestionGenerator[]>([]);
+  const [approachIndex, setApproachIndex] = useState(0);
   const [started, setStarted] = useState(false);
   const [questionNumber, setQuestionNumber] = useState(0);
   const [score, setScore] = useState(0);
-  const [startTime, setStartTime] = useState<number | null>(null);
-  const [endTime, setEndTime] = useState<number | null>(null);
-  const [gameOver, setGameOver] = useState(false);
-  const [tempAnswer, setTempAnswer] = useState<number | null>(null);
   const [number1, setNumber1] = useState<number | null>(null);
   const [number2, setNumber2] = useState<number | null>(null);
   const [operator, setOperator] = useState<string | null>(null);
   const [correctAnswer, setCorrectAnswer] = useState<number | null>(null);
+  const [tempAnswer, setTempAnswer] = useState<number | null>(null);
+  const [showResult, setShowResult] = useState(false);
+
+  // 🕒 Time tracking
+  const [startTime, setStartTime] = useState<number | null>(null);
+  const [elapsedTime, setElapsedTime] = useState(0);
 
   useEffect(() => {
-    const gen = getGeneratorForDay(day);
-    if (typeof gen === "function") {
-      setGenerator(() => gen);
-    } else {
-      console.error("Invalid generator function for day:", day);
-    }
+    const gens = getGeneratorsForDay(day);
+    setGenerators(gens);
   }, [day]);
 
+  const currentGenerator = generators[approachIndex];
+
   const generateQuestion = () => {
-    if (!generator) return;
-    const [num1, num2, answer, op] = generator();
-    setNumber1(num1);
-    setNumber2(num2);
+    if (!currentGenerator) return;
+    const [a, b, ans, op] = currentGenerator();
+    setNumber1(a);
+    setNumber2(b);
+    setCorrectAnswer(ans);
     setOperator(op);
-    setCorrectAnswer(answer);
     setTempAnswer(null);
   };
 
-  const handleStart = () => {
-    if (!generator) return;
+  // ⏱ Start the timer and quiz
+  const startApproach = () => {
     setStarted(true);
-    setStartTime(Date.now());
+    setScore(0);
     setQuestionNumber(1);
+    setShowResult(false);
     generateQuestion();
+    setStartTime(Date.now());
+    setElapsedTime(0);
   };
+
+  // ⏱ Timer effect (updates every second)
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (started && startTime) {
+      timer = setInterval(() => {
+        setElapsedTime(Math.floor((Date.now() - startTime) / 1000));
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [started, startTime]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = parseInt(e.target.value);
@@ -63,88 +78,98 @@ const Test: React.FC = () => {
   };
 
   const handleAnswer = (userAnswer: number) => {
-    if (!generator || correctAnswer === null) return;
+    if (correctAnswer === null) return;
     if (userAnswer === correctAnswer) {
       setScore((prev) => prev + 1);
     }
 
-    if (questionNumber < 60) {
+    if (questionNumber < QUESTIONS_PER_APPROACH) {
       setQuestionNumber((prev) => prev + 1);
       generateQuestion();
     } else {
-      setGameOver(true);
-      setEndTime(Date.now());
+      setShowResult(true);
+      setStarted(false);
     }
   };
 
   const handleRetry = () => {
-    setStarted(false);
-    setScore(0);
-    setQuestionNumber(0);
-    setStartTime(null);
-    setEndTime(null);
-    setGameOver(false);
-    setTempAnswer(null);
-    setNumber1(null);
-    setNumber2(null);
-    setOperator(null);
-    setCorrectAnswer(null);
+    startApproach();
   };
 
-  if (!generator) {
-    return <p className="text-2xl text-Dark-blue">Loading...</p>;
+  const handleNextApproach = () => {
+    if (approachIndex < generators.length - 1) {
+      setApproachIndex((prev) => prev + 1);
+      startApproach();
+    } else {
+      alert("✅ Day completed! (Learning task coming soon...)");
+    }
+  };
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}m ${secs}s`;
+  };
+
+  // ⏱ Result screen with time
+  if (showResult) {
+    return (
+      <div className="flex flex-col gap-4 items-center">
+        <p className="text-3xl font-bold text-Dark-blue">
+          Score: {score} / {QUESTIONS_PER_APPROACH}
+        </p>
+        <p className="text-xl text-gray-700">
+          Time Taken: {formatTime(elapsedTime)}
+        </p>
+        <div className="flex gap-6">
+          <button
+            onClick={handleRetry}
+            className="bg-Dark-blue text-white px-6 py-2 rounded-lg"
+          >
+            Practice Again
+          </button>
+          <button
+            onClick={handleNextApproach}
+            className="bg-green-600 text-white px-6 py-2 rounded-lg"
+          >
+            Next Approach
+          </button>
+        </div>
+      </div>
+    );
   }
 
   if (!started) {
     return (
-      <button
-        onClick={handleStart}
-        className="h-12 px-12 rounded-2xl mx-auto flex justify-center items-center bg-Dark-blue hover:bg-Dark-blue/80 transition-colors duration-300"
-      >
-        <p className="text-Black text-3xl font-semibold select-none">
-          Start Day {day}
-        </p>
-      </button>
-    );
-  }
-
-  if (gameOver) {
-    const timeTaken =
-      startTime && endTime ? ((endTime - startTime) / 1000).toFixed(2) : "0";
-    return (
-      <div className="flex flex-col gap-6 justify-center items-center">
-        <p className="text-3xl font-semibold text-Dark-blue">
-          Score: {score} / 60
-        </p>
-        <p className="text-3xl font-semibold text-Dark-blue">
-          Time taken: {timeTaken} seconds
-        </p>
+      <div className="flex flex-col gap-4 items-center">
+        <p className="text-xl text-gray-600">Approach {approachIndex + 1} of {generators.length}</p>
         <button
-          onClick={handleRetry}
-          className="h-12 px-12 rounded-2xl bg-Dark-blue hover:bg-Dark-blue/80 transition-colors duration-300"
+          onClick={startApproach}
+          className="bg-Dark-blue text-white text-2xl px-6 py-3 rounded-xl"
         >
-          <p className="text-Black text-3xl font-semibold select-none">Retry</p>
+          Start Approach {approachIndex + 1}
         </button>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col items-center justify-center gap-8 p-4">
-      <p className="text-4xl font-bold text-Dark-blue">
-        Question {questionNumber} / 60
+    <div className="flex flex-col gap-6 items-center justify-center p-4">
+      <p className="text-xl text-Dark-blue font-semibold">
+        Approach {approachIndex + 1} | Question {questionNumber} /{" "}
+        {QUESTIONS_PER_APPROACH}
       </p>
-      <div className="flex gap-6 items-center">
-        <p className="text-4xl font-semibold text-Black select-none">
+      <p className="text-sm text-gray-600">Time: {formatTime(elapsedTime)}</p>
+      <div className="flex items-center gap-6">
+        <p className="text-3xl font-bold select-none text-Black">
           {number1} {operator} {number2} = ?
         </p>
         <input
           type="number"
-          className="text-black text-4xl rounded border-2 border-Dark-blue w-24 text-center focus:outline-none focus:ring-4 focus:ring-Dark-blue/50 transition"
           value={tempAnswer ?? ""}
           onChange={handleChange}
+          className="border-2 border-Dark-blue text-3xl text-center w-24 rounded focus:outline-none focus:ring-2 focus:ring-Dark-blue/50"
           autoFocus
-          inputMode="numeric"
         />
       </div>
     </div>
@@ -152,3 +177,5 @@ const Test: React.FC = () => {
 };
 
 export default Test;
+
+
