@@ -159,19 +159,26 @@ const QuizClient: React.FC = () => {
   }
 
   return (
-    <div className="flex flex-col gap-6 items-center bg-background  justify-center p-4">
+    <div className="flex flex-col  items-center bg-background  justify-center p-4">
       <div>
-        <p className=" flex flex-col justify-center items-center text-2xl text-Dark-blue font-semibold">
-        Approach {approachIndex + 1}  
-      </p>
-      <p className="text-2xl mt-2 text-Dark-blue font-semibold">
+       <p
+  className="flex flex-col justify-center items-center text-2xl text-Dark-blue font-semibold"
+  style={{ marginTop: '40px' }}
+>
+  Approach {approachIndex + 1}
+</p>
+
+      <p className="text-2xl mt-2 text-Dark-blue font-semibold" style={{ marginTop: '20px' }}
+>
         Question {questionNumber} /{" "}
         {QUESTIONS_PER_APPROACH}
       </p>
       </div>
-      <p className="text-xl text-gray-600">Time: {formatTime(elapsedTime)}</p>
+      <p className="text-xl text-gray-600" style={{ marginTop: '20px' }}
+>Time: {formatTime(elapsedTime)}</p>
       <div className="flex  flex-col items-center gap-6">
-        <p className="text-4xl font-bold select-none text-Black">
+        <p className="text-4xl font-bold select-none text-Black" style={{ marginTop: '20px' }}
+>
           {number1} {operator} {number2} = ?
         </p>
         <input
