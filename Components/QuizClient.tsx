@@ -139,8 +139,8 @@ const QuizClient: React.FC = () => {
 
   if (!started) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-background mt-32 gap-y-32">
-  <p className="text-3xl text-light text-center">
+      <div className="flex  flex-col items-center justify-center bg-background mt-32 gap-y-32">
+  <p className=" absolute top-[30%] text-3xl text-light text-center">
     Task {approachIndex + 1} of {generators.length}
   </p>
 
@@ -157,13 +157,18 @@ const QuizClient: React.FC = () => {
 
   return (
     <div className="flex flex-col gap-6 items-center bg-background  justify-center p-4">
-      <p className="text-xl text-Dark-blue font-semibold">
-        Approach {approachIndex + 1} | Question {questionNumber} /{" "}
+      <div>
+        <p className=" flex flex-col justify-center items-center text-2xl text-Dark-blue font-semibold">
+        Approach {approachIndex + 1}  
+      </p>
+      <p className="text-2xl mt-2 text-Dark-blue font-semibold">
+        Question {questionNumber} /{" "}
         {QUESTIONS_PER_APPROACH}
       </p>
-      <p className="text-sm text-gray-600">Time: {formatTime(elapsedTime)}</p>
+      </div>
+      <p className="text-xl text-gray-600">Time: {formatTime(elapsedTime)}</p>
       <div className="flex  flex-col items-center gap-6">
-        <p className="text-3xl font-bold select-none text-Black">
+        <p className="text-4xl font-bold select-none text-Black">
           {number1} {operator} {number2} = ?
         </p>
         <input
