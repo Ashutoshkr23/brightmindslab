@@ -116,10 +116,10 @@ const QuizClient: React.FC = () => {
         <p className="text-3xl font-bold text-Dark-blue" style={{ marginTop: '120px' }}>
           Score: {score} / {QUESTIONS_PER_APPROACH}
         </p>
-        <p className="text-xl text-gray-700" style={{ marginTop: '60px' }}>
+        <p className="text-2xl text-gray-700" style={{ marginTop: '60px' }}>
           Time Taken: {formatTime(elapsedTime)}
         </p>
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-6" style={{ marginTop: '60px' }}>
           <button
   onClick={handleRetry}
   className="bg-primary text-dark text-xl md:text-2xl px-6 py-3 rounded-xl shadow hover:bg-opacity-90 transition"
@@ -129,7 +129,8 @@ const QuizClient: React.FC = () => {
 
 <button
   onClick={handleNextApproach}
-  className="bg-green-600 text-white text-xl md:text-2xl px-6 py-3 rounded-xl shadow hover:bg-green-700 transition"
+  style={{ marginTop: '60px' }}
+  className="bg-secondary text-white text-xl md:text-2xl px-6 py-3 rounded-xl shadow hover:bg-green-700 transition"
 >
   Next Approach
 </button>
