@@ -115,16 +115,17 @@ const QuizClient: React.FC = () => {
 
   return (
     <div className="flex flex-col gap-4 bg-background items-center min-h-screen">
-      <p className="text-3xl font-bold text-Dark-blue mt-[120px]">
+      <p className="text-3xl font-bold text-Dark-blue mt-[120px]" style={{ marginTop: '120px' }}>
         Score: {score} / {QUESTIONS_PER_APPROACH}
       </p>
-      <p className="text-2xl text-gray-700 mt-[60px]">
+      <p className="text-2xl text-gray-700 mt-[60px]" style={{ marginTop: '60px' }}>
         Time Taken: {formatTime(elapsedTime)}
       </p>
 
       <div className="flex flex-col md:flex-row gap-6 mt-[60px]">
         <button
           onClick={handleRetry}
+          style={{ marginTop: '60px' }}
           className="bg-primary text-dark text-xl md:text-2xl px-6 py-3 rounded-xl shadow hover:bg-opacity-90 transition"
         >
           Practice Again
@@ -132,6 +133,7 @@ const QuizClient: React.FC = () => {
 
         {isLastApproach ? (
           <button
+            style={{ marginTop: '60px' }}
             onClick={() => window.location.href = '/challenge'}
             className="bg-red-600 text-white text-xl md:text-2xl px-6 py-3 rounded-xl shadow hover:bg-red-700 transition"
           >
@@ -140,6 +142,7 @@ const QuizClient: React.FC = () => {
         ) : (
           <button
             onClick={handleNextApproach}
+            style={{ marginTop: '60px' }}
             className="bg-secondary text-white text-xl md:text-2xl px-6 py-3 rounded-xl shadow hover:bg-green-700 transition"
           >
             Next Approach
