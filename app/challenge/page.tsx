@@ -16,6 +16,7 @@ export default function ChallengePage() {
         <h1 className="text-3xl md:text-4xl font-bold text-primary text-center mb-6">
           30-Day Challenge
         </h1>
+        <p className="text-3xl">{currentDay}</p>
         <p className="text-center text-light mb-8">
           Select a day to start your mental maths mastery journey!
         </p>
