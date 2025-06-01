@@ -139,18 +139,21 @@ const QuizClient: React.FC = () => {
 
   if (!started) {
     return (
-      <div className="flex  flex-col items-center justify-center bg-background mt-32 gap-y-32">
-  <p className=" absolute top-[30%] text-3xl text-light text-center">
+  <div className="relative min-h-screen bg-background flex items-center justify-center">
+  <p className="absolute top-[30%] w-full text-center text-3xl text-light">
     Task {approachIndex + 1} of {generators.length}
   </p>
 
-  <button
-    onClick={startApproach}
-    className="bg-primary text-dark mt-32 text-2xl md:text-3xl px-6 py-3 rounded-xl shadow hover:bg-[#e08e0b] transition"
-  >
-    Start Task {approachIndex + 1}
-  </button>
+  <div className="absolute top-[50%] w-full flex justify-center">
+    <button
+      onClick={startApproach}
+      className="bg-primary text-dark text-2xl md:text-3xl px-6 py-3 rounded-xl shadow hover:bg-[#e08e0b] transition"
+    >
+      Start Task {approachIndex + 1}
+    </button>
+  </div>
 </div>
+
 
     );
   }
