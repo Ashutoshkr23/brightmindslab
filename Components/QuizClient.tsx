@@ -113,25 +113,27 @@ const QuizClient: React.FC = () => {
   if (showResult) {
     return (
       <div className="flex flex-col gap-4 bg-background items-center">
-        <p className="text-3xl font-bold text-Dark-blue">
+        <p className="text-3xl font-bold text-Dark-blue" style={{ marginTop: '120px' }}>
           Score: {score} / {QUESTIONS_PER_APPROACH}
         </p>
-        <p className="text-xl text-gray-700">
+        <p className="text-xl text-gray-700" style={{ marginTop: '60px' }}>
           Time Taken: {formatTime(elapsedTime)}
         </p>
-        <div className="flex gap-6">
+        <div className="flex flex-col gap-6">
           <button
-            onClick={handleRetry}
-            className="bg-Dark-blue text-white px-6 py-2 rounded-lg"
-          >
-            Practice Again
-          </button>
-          <button
-            onClick={handleNextApproach}
-            className="bg-green-600 text-white px-6 py-2 rounded-lg"
-          >
-            Next Approach
-          </button>
+  onClick={handleRetry}
+  className="bg-primary text-dark text-xl md:text-2xl px-6 py-3 rounded-xl shadow hover:bg-opacity-90 transition"
+>
+  Practice Again
+</button>
+
+<button
+  onClick={handleNextApproach}
+  className="bg-green-600 text-white text-xl md:text-2xl px-6 py-3 rounded-xl shadow hover:bg-green-700 transition"
+>
+  Next Approach
+</button>
+
         </div>
       </div>
     );
@@ -140,11 +142,11 @@ const QuizClient: React.FC = () => {
   if (!started) {
     return (
   <div className="relative min-h-screen bg-background flex flex-col gap-y-20 ">
-  <p className="w-full text-center text-3xl text-light" style={{ marginTop: '80px' }}>
+  <p className="w-full text-center text-3xl text-light" style={{ marginTop: '120px' }}>
     Task {approachIndex + 1} of {generators.length}
   </p>
 
-  <div className=" w-full flex justify-center" style={{ marginTop: '80px' }}>
+  <div className=" w-full flex justify-center" style={{ marginTop: '120px' }}>
     <button
       onClick={startApproach}
       className="bg-primary text-dark text-2xl md:text-3xl px-6 py-3 rounded-xl shadow hover:bg-[#e08e0b] transition"
@@ -185,7 +187,7 @@ const QuizClient: React.FC = () => {
           type="number"
           value={tempAnswer ?? ""}
           onChange={handleChange}
-          style={{ width: '160px' }}
+          style={{ width: '160px', marginTop: '40px' }}
           className="border-2 border-Dark-blue text-black text-3xl text-center w-24 rounded focus:outline-none focus:ring-2 focus:ring-Dark-blue/50"
           autoFocus
         />
