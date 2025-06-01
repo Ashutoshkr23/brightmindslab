@@ -140,11 +140,11 @@ const QuizClient: React.FC = () => {
   if (!started) {
     return (
   <div className="relative min-h-screen bg-background flex flex-col gap-y-20 ">
-  <p className="w-full text-center text-3xl text-light" style={{ marginTop: '40px' }}>
+  <p className="w-full text-center text-3xl text-light" style={{ marginTop: '80px' }}>
     Task {approachIndex + 1} of {generators.length}
   </p>
 
-  <div className=" w-full flex justify-center" style={{ marginTop: '40px' }}>
+  <div className=" w-full flex justify-center" style={{ marginTop: '80px' }}>
     <button
       onClick={startApproach}
       className="bg-primary text-dark text-2xl md:text-3xl px-6 py-3 rounded-xl shadow hover:bg-[#e08e0b] transition"
@@ -162,13 +162,13 @@ const QuizClient: React.FC = () => {
     <div className="flex flex-col  items-center bg-background  justify-center p-4">
       <div>
        <p
-  className="flex flex-col justify-center items-center text-2xl text-Dark-blue font-semibold"
+  className="flex flex-col justify-center items-center text-3xl text-Dark-blue font-semibold"
   style={{ marginTop: '40px' }}
 >
   Approach {approachIndex + 1}
 </p>
 
-      <p className="text-2xl mt-2 text-Dark-blue font-semibold" style={{ marginTop: '20px' }}
+      <p className="text-3xl mt-2 text-Dark-blue font-semibold" style={{ marginTop: '20px' }}
 >
         Question {questionNumber} /{" "}
         {QUESTIONS_PER_APPROACH}
