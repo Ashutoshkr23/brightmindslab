@@ -139,12 +139,12 @@ const QuizClient: React.FC = () => {
 
   if (!started) {
     return (
-  <div className="relative min-h-screen bg-background flex flex-col gap-y-20 items-center justify-center">
-  <p className="absolute top-[30%] w-full text-center text-3xl text-light">
+  <div className="relative min-h-screen bg-background flex flex-col gap-y-20 ">
+  <p className="w-full text-center text-3xl text-light" style={{ marginTop: '40px' }}>
     Task {approachIndex + 1} of {generators.length}
   </p>
 
-  <div className="absolute top-[50%] w-full flex justify-center">
+  <div className=" w-full flex justify-center" style={{ marginTop: '40px' }}>
     <button
       onClick={startApproach}
       className="bg-primary text-dark text-2xl md:text-3xl px-6 py-3 rounded-xl shadow hover:bg-[#e08e0b] transition"
@@ -185,6 +185,7 @@ const QuizClient: React.FC = () => {
           type="number"
           value={tempAnswer ?? ""}
           onChange={handleChange}
+          style={{ width: '160px' }}
           className="border-2 border-Dark-blue text-black text-3xl text-center w-24 rounded focus:outline-none focus:ring-2 focus:ring-Dark-blue/50"
           autoFocus
         />
