@@ -139,7 +139,7 @@ const QuizClient: React.FC = () => {
 
   if (!started) {
     return (
-  <div className="relative min-h-screen bg-background flex items-center justify-center">
+  <div className="relative min-h-screen bg-background flex flex-col items-center justify-center">
   <p className="absolute top-[30%] w-full text-center text-3xl text-light">
     Task {approachIndex + 1} of {generators.length}
   </p>
