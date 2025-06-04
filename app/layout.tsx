@@ -59,6 +59,8 @@ export default function RootLayout({
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#000000" />
         <link rel="apple-touch-icon" href="/icon-192x192.png" />
+        <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2423736220466613"
+     crossOrigin="anonymous"></script>
          <Script
           src="//pl26836988.profitableratecpm.com/7b/78/8b/7b788b30a4dc41deb218d49c03e8003f.js"
           strategy="lazyOnload"
