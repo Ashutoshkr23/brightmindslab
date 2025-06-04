@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import Script from "next/script";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
@@ -58,7 +59,10 @@ export default function RootLayout({
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#000000" />
         <link rel="apple-touch-icon" href="/icon-192x192.png" />
-        <script type='text/javascript' src='//pl26836988.profitableratecpm.com/7b/78/8b/7b788b30a4dc41deb218d49c03e8003f.js'></script>
+         <Script
+          src="//pl26836988.profitableratecpm.com/7b/78/8b/7b788b30a4dc41deb218d49c03e8003f.js"
+          strategy="lazyOnload"
+        />
         {/*
         <meta name="monetag" content="ca6a1648193f22d8761c46647d004dfc" />
         <script
