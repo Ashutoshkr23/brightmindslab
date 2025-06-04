@@ -68,13 +68,7 @@ export default function RootLayout({
         {/*
          
         */}
-        <meta name="monetag" content="ca6a1648193f22d8761c46647d004dfc" />
-        <script
-          src="https://fpyf8.com/88/tag.min.js"
-          data-zone="150636"
-          async
-          data-cfasync="false"
-        ></script>
+        
         
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
