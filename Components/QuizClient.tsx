@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { getGeneratorsForDay, QuestionGenerator } from "@/lib/dayGenerators";
 
+// Same Test component code from before:
 const QUESTIONS_PER_APPROACH = 20;
 
 const QuizClient: React.FC = () => {
@@ -22,6 +23,7 @@ const QuizClient: React.FC = () => {
   const [correctAnswer, setCorrectAnswer] = useState<number | null>(null);
   const [tempAnswer, setTempAnswer] = useState<number | null>(null);
   const [showResult, setShowResult] = useState(false);
+
   const [startTime, setStartTime] = useState<number | null>(null);
   const [elapsedTime, setElapsedTime] = useState(0);
 
@@ -42,32 +44,14 @@ const QuizClient: React.FC = () => {
     setTempAnswer(null);
   };
 
-  const injectInterstitialAd = () => {
-    const script = document.createElement("script");
-    script.src = "https://groleegni.net/401/9412753";
-    script.async = true;
-    try {
-      (document.body || document.documentElement).appendChild(script);
-    } catch (e) {
-      console.error("Ad injection failed", e);
-    }
-  };
-
-  const delayedStartApproach = () => {
-    setTimeout(() => {
-      setStarted(true);
-      setScore(0);
-      setQuestionNumber(1);
-      setShowResult(false);
-      generateQuestion();
-      setStartTime(Date.now());
-      setElapsedTime(0);
-    }, 1500); // 1.5 second delay after ad
-  };
-
   const startApproach = () => {
-    injectInterstitialAd();
-    delayedStartApproach();
+    setStarted(true);
+    setScore(0);
+    setQuestionNumber(1);
+    setShowResult(false);
+    generateQuestion();
+    setStartTime(Date.now());
+    setElapsedTime(0);
   };
 
   useEffect(() => {
@@ -113,11 +97,8 @@ const QuizClient: React.FC = () => {
 
   const handleNextApproach = () => {
     if (approachIndex < generators.length - 1) {
-      injectInterstitialAd();
-      setTimeout(() => {
-        setApproachIndex((prev) => prev + 1);
-        delayedStartApproach();
-      }, 1500);
+      setApproachIndex((prev) => prev + 1);
+      startApproach();
     } else {
       alert("✅ Day completed! (Learning task coming soon...)");
     }
@@ -130,86 +111,99 @@ const QuizClient: React.FC = () => {
   };
 
   if (showResult) {
-    const isLastApproach = approachIndex === generators.length - 1;
+  const isLastApproach = approachIndex === generators.length - 1;
 
-    return (
-      <div className="flex flex-col gap-4 bg-background items-center min-h-screen">
-        <p className="text-3xl font-bold text-Dark-blue mt-[120px]">
-          Score: {score} / {QUESTIONS_PER_APPROACH}
-        </p>
-        <p className="text-2xl text-gray-700 mt-[60px]">
-          Time Taken: {formatTime(elapsedTime)}
-        </p>
+  return (
+    <div className="flex flex-col gap-4 bg-background items-center min-h-screen">
+      <p className="text-3xl font-bold text-Dark-blue mt-[120px]" style={{ marginTop: '120px' }}>
+        Score: {score} / {QUESTIONS_PER_APPROACH}
+      </p>
+      <p className="text-2xl text-gray-700 mt-[60px]" style={{ marginTop: '60px' }}>
+        Time Taken: {formatTime(elapsedTime)}
+      </p>
 
-        <div className="flex flex-col md:flex-row gap-6 mt-[60px]">
+      <div className="flex flex-col md:flex-row gap-6 mt-[60px]">
+        <button
+          onClick={handleRetry}
+          style={{ marginTop: '60px' }}
+          className="bg-primary text-dark text-xl md:text-2xl px-6 py-3 rounded-xl shadow hover:bg-opacity-90 transition"
+        >
+          Practice Again
+        </button>
+
+        {isLastApproach ? (
           <button
-            onClick={handleRetry}
-            className="bg-primary text-dark text-xl md:text-2xl px-6 py-3 rounded-xl shadow hover:bg-opacity-90 transition"
+            style={{ marginTop: '60px' }}
+            onClick={() => window.location.href = '/challenge'}
+            className="bg-red-600 text-white text-xl md:text-2xl px-6 py-3 rounded-xl shadow hover:bg-red-700 transition"
           >
-            Practice Again
+            Back to Home
           </button>
-
-          {isLastApproach ? (
-            <button
-              onClick={() => window.location.href = '/challenge'}
-              className="bg-red-600 text-white text-xl md:text-2xl px-6 py-3 rounded-xl shadow hover:bg-red-700 transition"
-            >
-              Back to Home
-            </button>
-          ) : (
-            <button
-              onClick={handleNextApproach}
-              className="bg-secondary text-white text-xl md:text-2xl px-6 py-3 rounded-xl shadow hover:bg-green-700 transition"
-            >
-              Next Approach
-            </button>
-          )}
-        </div>
+        ) : (
+          <button
+            onClick={handleNextApproach}
+            style={{ marginTop: '60px' }}
+            className="bg-secondary text-white text-xl md:text-2xl px-6 py-3 rounded-xl shadow hover:bg-green-700 transition"
+          >
+            Next Approach
+          </button>
+        )}
       </div>
-    );
-  }
+    </div>
+  );
+}
+
 
   if (!started) {
     return (
-      <div className="relative min-h-screen bg-background flex flex-col gap-y-20 ">
-        <p className="w-full text-center text-3xl text-light mt-[120px]">
-          Task {approachIndex + 1} of {generators.length}
-        </p>
+  <div className="relative min-h-screen bg-background flex flex-col gap-y-20 ">
+  <p className="w-full text-center text-3xl text-light" style={{ marginTop: '120px' }}>
+    Task {approachIndex + 1} of {generators.length}
+  </p>
 
-        <div className="w-full flex justify-center mt-[120px]">
-          <button
-            onClick={startApproach}
-            className="bg-primary text-dark text-2xl md:text-3xl px-6 py-3 rounded-xl shadow hover:bg-[#e08e0b] transition"
-          >
-            Start Task {approachIndex + 1}
-          </button>
-        </div>
-      </div>
+  <div className=" w-full flex justify-center" style={{ marginTop: '120px' }}>
+    <button
+      onClick={startApproach}
+      className="bg-primary text-dark text-2xl md:text-3xl px-6 py-3 rounded-xl shadow hover:bg-[#e08e0b] transition"
+    >
+      Start Task {approachIndex + 1}
+    </button>
+  </div>
+</div>
+
+
     );
   }
 
   return (
-    <div className="flex flex-col items-center bg-background justify-center p-4">
+    <div className="flex flex-col  items-center bg-background  justify-center p-4">
       <div>
-        <p className="text-3xl text-Dark-blue font-semibold mt-[40px]">
-          Approach {approachIndex + 1}
-        </p>
-        <p className="text-3xl mt-2 text-Dark-blue font-semibold ">
-          Question {questionNumber} / {QUESTIONS_PER_APPROACH}
-        </p>
-      </div>
-      <p className="text-xl text-gray-600 mt-[20px]">
-        Time: {formatTime(elapsedTime)}
+       <p
+  className="flex flex-col justify-center items-center text-3xl text-Dark-blue font-semibold"
+  style={{ marginTop: '40px' }}
+>
+  Approach {approachIndex + 1}
+</p>
+
+      <p className="text-3xl mt-2 text-Dark-blue font-semibold" style={{ marginTop: '20px' }}
+>
+        Question {questionNumber} /{" "}
+        {QUESTIONS_PER_APPROACH}
       </p>
-      <div className="flex flex-col items-center gap-6">
-        <p className="text-4xl font-bold select-none text-Black mt-[20px]">
+      </div>
+      <p className="text-xl text-gray-600" style={{ marginTop: '20px' }}
+>Time: {formatTime(elapsedTime)}</p>
+      <div className="flex  flex-col items-center gap-6">
+        <p className="text-4xl font-bold select-none text-Black" style={{ marginTop: '20px' }}
+>
           {number1} {operator} {number2} = ?
         </p>
         <input
           type="number"
           value={tempAnswer ?? ""}
           onChange={handleChange}
-          className="border-2 border-Dark-blue text-black text-3xl text-center w-24 rounded focus:outline-none focus:ring-2 focus:ring-Dark-blue/50 mt-[40px]"
+          style={{ width: '160px', marginTop: '40px' }}
+          className="border-2 border-Dark-blue text-black text-3xl text-center w-24 rounded focus:outline-none focus:ring-2 focus:ring-Dark-blue/50"
           autoFocus
         />
       </div>
