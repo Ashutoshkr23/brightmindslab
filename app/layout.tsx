@@ -38,7 +38,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        {/* ✅ Your custom script added right after <head> starts */}
+        {/* ✅ Your custom script added right after <head> starts */
         <script
           dangerouslySetInnerHTML={{
             __html: `
@@ -51,6 +51,8 @@ export default function RootLayout({
             `,
           }}
         />
+        }
+        
 
         {/* ✅ Other meta and link tags */}
         <link rel="manifest" href="/manifest.json" />
