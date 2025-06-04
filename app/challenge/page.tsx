@@ -18,7 +18,7 @@ export default function ChallengePage() {
         </h1>
         <p className="text-center text-light mb-8">
           Select a day to start your mental maths mastery journey!
-        </p>
+        </p> 
 
         <div className="space-y-4">
           {days.map((day) => {
