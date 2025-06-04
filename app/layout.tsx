@@ -38,7 +38,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        {/* ✅ Your custom script added right after <head> starts */
+        {/* ✅ Your custom script added right after <head> starts 
         <script
           dangerouslySetInnerHTML={{
             __html: `
@@ -50,7 +50,7 @@ export default function RootLayout({
               })('groleegni.net',9412753,document.createElement('script'));
             `,
           }}
-        />
+        />*/
         }
         
 
