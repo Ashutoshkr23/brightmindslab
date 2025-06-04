@@ -12,7 +12,7 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-// ✅ Move themeColor to viewport
+// ✅ Theme color for mobile browser
 export const viewport: Viewport = {
   themeColor: "#000000",
 };
@@ -20,13 +20,13 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   title: "Bright Minds Lab",
   description: "A Next.js PWA App",
-  manifest: "/manifest.json", // ✅ Ensure this file exists
+  manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
   },
   icons: {
-    apple: "/logoo.png", // ✅ Ensure this path is correct
+    apple: "/logoo.png",
   },
 };
 
@@ -38,16 +38,33 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        {/* ✅ Manually add PWA-related meta tags */}
+        {/* ✅ Your custom script added right after <head> starts */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function(d,z,s){
+                s.src='https://'+d+'/401/'+z;
+                try{
+                  (document.body || document.documentElement).appendChild(s)
+                }catch(e){}
+              })('groleegni.net',9412753,document.createElement('script'));
+            `,
+          }}
+        />
+
+        {/* ✅ Other meta and link tags */}
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#000000" />
         <link rel="apple-touch-icon" href="/icon-192x192.png" />
-        <meta name="monetag" content="ca6a1648193f22d8761c46647d004dfc"></meta>
-        <script src="https://fpyf8.com/88/tag.min.js" data-zone="150636" async data-cfasync="false"></script>
+        <meta name="monetag" content="ca6a1648193f22d8761c46647d004dfc" />
+        <script
+          src="https://fpyf8.com/88/tag.min.js"
+          data-zone="150636"
+          async
+          data-cfasync="false"
+        ></script>
       </head>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         {children}
       </body>
     </html>
