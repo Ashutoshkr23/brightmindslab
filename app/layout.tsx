@@ -73,6 +73,7 @@ export default function RootLayout({
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         {children}
+        <script type='text/javascript' src='//pl26878204.profitableratecpm.com/bc/d4/89/bcd489d0515736de627f9815fe198cc3.js'></script>
       </body>
     </html>
   );
