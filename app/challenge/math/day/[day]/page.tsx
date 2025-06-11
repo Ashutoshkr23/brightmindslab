@@ -1,5 +1,11 @@
-import MathDayClient from "@/Components/MathDayClient";
+'use client';
 
-export default function MathDayPage({ params }: { params: { day: string } }) {
-  return <MathDayClient day={params.day} />;
+import { useParams } from 'next/navigation';
+import MathDayClient from '@/Components/MathDayClient';
+
+export default function MathDayPage() {
+  const params = useParams();
+  const day = params?.day as string;
+
+  return <MathDayClient day={day} />;
 }
