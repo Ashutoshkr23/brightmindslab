@@ -59,12 +59,13 @@ export default function RootLayout({
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#000000" />
         <link rel="apple-touch-icon" href="/icon-192x192.png" />
-        <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2423736220466613"
-     crossOrigin="anonymous"></script>
+        {/*
          <Script
           src="//pl26836988.profitableratecpm.com/7b/78/8b/7b788b30a4dc41deb218d49c03e8003f.js"
           strategy="lazyOnload"
-        />
+        />*/}
+        <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2423736220466613"
+     crossOrigin="anonymous"></script>
         {/*
          
         */}
@@ -73,7 +74,8 @@ export default function RootLayout({
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         {children}
-        <script type='text/javascript' src='//pl26878204.profitableratecpm.com/bc/d4/89/bcd489d0515736de627f9815fe198cc3.js'></script>
+          {/* <script type='text/javascript' src='//pl26878204.profitableratecpm.com/bc/d4/89/bcd489d0515736de627f9815fe198cc3.js'></script>*/}
+       
       </body>
     </html>
   );
