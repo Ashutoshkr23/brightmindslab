@@ -1,3 +1,5 @@
+'use client';
+
 import { use } from "react";
 import Link from "next/link";
 
@@ -30,12 +32,18 @@ export default function ReviseConceptPage({ params }: Props) {
         </p>
       </section>
 
-      <section className="bg-dark p-4 rounded-xl shadow-md">
+      <section className="bg-dark p-4 rounded-xl shadow-md mb-6">
         <h2 className="text-lg font-semibold mb-2 text-light">🧠 Why it works:</h2>
         <p className="text-sm text-light leading-relaxed">
           You're basically using place values. Splitting 52 into 50 + 2 and using 11 = 10 + 1.
         </p>
       </section>
+
+      <Link href={`/challenge/math/day/${day}/task/${task}/practice`} className="mt-4">
+        <button className="w-full bg-primary text-dark py-3 rounded-xl text-center hover:bg-opacity-90">
+          Practice Now
+        </button>
+      </Link>
     </main>
   );
 }
