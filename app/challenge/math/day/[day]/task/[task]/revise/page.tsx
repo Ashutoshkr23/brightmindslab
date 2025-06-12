@@ -35,7 +35,7 @@ export default function ReviseConceptPage({ params }: Props) {
       <section className="bg-dark p-4 rounded-xl shadow-md mb-6">
         <h2 className="text-lg font-semibold mb-2 text-light">🧠 Why it works:</h2>
         <p className="text-sm text-light leading-relaxed">
-          You're basically using place values. Splitting 52 into 50 + 2 and using 11 = 10 + 1.
+          You&apos;re basically using place values. Splitting 52 into 50 + 2 and using 11 = 10 + 1.
         </p>
       </section>
 
