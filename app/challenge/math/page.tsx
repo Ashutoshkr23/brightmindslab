@@ -13,6 +13,7 @@ export default function MathDayPage({ params }: { params: { day: string } }) {
     const savedDay = localStorage.getItem('math-day');
     const progress = savedDay ? parseInt(savedDay) : 1;
     setCurrentDay(progress);
+    console.log(currentDay)
 
     if (dayNumber > progress) {
       alert('🚫 This day is not unlocked yet!');
