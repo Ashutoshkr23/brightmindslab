@@ -1,19 +1,16 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import Link from 'next/link';
 
 export default function MathDayPage({ params }: { params: { day: string } }) {
   const router = useRouter();
   const dayNumber = parseInt(params.day);
-  const [currentDay, setCurrentDay] = useState(1);
 
   useEffect(() => {
     const savedDay = localStorage.getItem('math-day');
     const progress = savedDay ? parseInt(savedDay) : 1;
-    setCurrentDay(progress);
-    console.log(currentDay)
 
     if (dayNumber > progress) {
       alert('🚫 This day is not unlocked yet!');

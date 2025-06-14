@@ -9,10 +9,11 @@ interface Props {
 
 export default function ReviseRulePage({ params }: Props) {
   const { day, rule } = params;
-  const ruleNumber = Number(rule);
-  const ruleData = englishRulesData[ruleNumber - 1];
-
-  const singleRule = Array.isArray(ruleData) ? ruleData[0] : ruleData;
+  const dayNumber = parseInt(day);
+  const ruleNumber = parseInt(rule);
+  const singleRule = englishRulesData[dayNumber]?.find(
+    (r) => r.rule === ruleNumber
+  );
 
   return (
     <main className="min-h-screen bg-background text-light p-4 space-y-6">
