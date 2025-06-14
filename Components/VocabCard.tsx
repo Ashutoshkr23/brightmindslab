@@ -1,5 +1,12 @@
 import React from 'react';
-export default function VocabCard({ word, meaning, usage }) {
+
+interface VocabCardProps {
+  word: string;
+  meaning: string;
+  usage: string;
+}
+
+export default function VocabCard({ word, meaning, usage }: VocabCardProps) {
   return (
     <div className="p-4 bg-dark rounded-2xl shadow-card mb-4">
       <h3 className="text-xl font-heading mb-1 text-primary">{word}</h3>
