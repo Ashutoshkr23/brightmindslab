@@ -3,11 +3,11 @@
 import Link from "next/link";
 import { englishRulesData } from "@/lib/englishRules";
 
-interface Props {
+export default function ReviseRulePage({
+  params,
+}: {
   params: { day: string; rule: string };
-}
-
-export default function ReviseRulePage({ params }: Props) {
+}) {
   const { day, rule } = params;
   const ruleNumber = Number(rule);
   const ruleData = englishRulesData[ruleNumber - 1];

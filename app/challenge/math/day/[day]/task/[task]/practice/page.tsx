@@ -1,11 +1,11 @@
 //import { use } from "react";
 import Link from "next/link";
 
-interface Props {
+export default function PracticeTaskPage({
+  params,
+}: {
   params: { day: string; task: string };
-}
-
-export default function PracticeTaskPage({ params }: Props) {
+}) {
   const { day, task } = params;
 
   return (

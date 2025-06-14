@@ -3,11 +3,11 @@
 //import { use } from "react";
 import Link from "next/link";
 
-interface Props {
+export default function ReviseConceptPage({
+  params,
+}: {
   params: { day: string; task: string };
-}
-
-export default function ReviseConceptPage({ params }: Props) {
+}) {
   const { day, task } = params;
 
   return (

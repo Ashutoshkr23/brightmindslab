@@ -1,11 +1,11 @@
 // app/challenge/english/day/[day]/rule/[rule]/practice/page.tsx
 import { englishRulesData } from "@/lib/englishRules";
 
-interface Props {
+export default function EnglishPracticePage({
+  params,
+}: {
   params: { day: string; rule: string };
-}
-
-export default function EnglishPracticePage({ params }: Props) {
+}) {
   const day = parseInt(params.day);
   const ruleNumber = parseInt(params.rule);
 

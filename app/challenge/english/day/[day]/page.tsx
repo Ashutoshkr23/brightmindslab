@@ -1,11 +1,11 @@
 //import { use } from "react";
 import Link from "next/link";
 
-interface Props {
+export default function EnglishDayPage({
+  params,
+}: {
   params: { day: string };
-}
-
-export default function EnglishDayPage({ params }: Props) {
+}) {
   const { day } = params;
   const rule1 = (parseInt(day) - 1) * 2 + 1;
   const rule2 = rule1 + 1;
