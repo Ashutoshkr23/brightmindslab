@@ -10,7 +10,12 @@ export default function Home() {
 
   const handleGoogleAuth = async () => {
     try {
-      await signInWithPopup(auth, provider);
+      if (auth && provider) {
+        await signInWithPopup(auth, provider);
+      } else {
+        console.error('Firebase not initialized');
+        return;
+      }
       router.push('/dashboard'); // direct to dashboard after login
     } catch (err) {
       console.error('Google sign-in error:', err);
