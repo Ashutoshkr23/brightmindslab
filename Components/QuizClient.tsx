@@ -1,19 +1,17 @@
-"use client";
+'use client';
 
 import React, { useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
 import { getGeneratorsForDay, QuestionGenerator } from "@/lib/dayGenerators";
 
-// Same Test component code from before:
+type QuizClientProps = {
+  day: number;
+  task: number;
+};
+
 const QUESTIONS_PER_APPROACH = 20;
 
-const QuizClient: React.FC = () => {
-  const searchParams = useSearchParams();
-  const dayParam = searchParams.get("day");
-  const day = dayParam && !isNaN(Number(dayParam)) ? parseInt(dayParam, 10) : 1;
-
+const QuizClient: React.FC<QuizClientProps> = ({ day, task }) => {
   const [generators, setGenerators] = useState<QuestionGenerator[]>([]);
-  const [approachIndex, setApproachIndex] = useState(0);
   const [started, setStarted] = useState(false);
   const [questionNumber, setQuestionNumber] = useState(0);
   const [score, setScore] = useState(0);
@@ -23,16 +21,16 @@ const QuizClient: React.FC = () => {
   const [correctAnswer, setCorrectAnswer] = useState<number | null>(null);
   const [tempAnswer, setTempAnswer] = useState<number | null>(null);
   const [showResult, setShowResult] = useState(false);
-
   const [startTime, setStartTime] = useState<number | null>(null);
   const [elapsedTime, setElapsedTime] = useState(0);
 
+  // Get question generators for the day
   useEffect(() => {
     const gens = getGeneratorsForDay(day);
     setGenerators(gens);
   }, [day]);
 
-  const currentGenerator = generators[approachIndex];
+  const currentGenerator = generators[task - 1];
 
   const generateQuestion = () => {
     if (!currentGenerator) return;
@@ -95,15 +93,6 @@ const QuizClient: React.FC = () => {
     startApproach();
   };
 
-  const handleNextApproach = () => {
-    if (approachIndex < generators.length - 1) {
-      setApproachIndex((prev) => prev + 1);
-      startApproach();
-    } else {
-      alert("✅ Day completed! (Learning task coming soon...)");
-    }
-  };
-
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -111,41 +100,35 @@ const QuizClient: React.FC = () => {
   };
 
   if (showResult) {
-  const isLastApproach = approachIndex === generators.length - 1;
+  const isLastTask = task === generators.length;
 
   return (
-    <div className="flex flex-col gap-4 bg-background items-center min-h-screen">
-      <p className="text-3xl font-bold text-Dark-blue mt-[120px]" style={{ marginTop: '120px' }}>
-        Score: {score} / {QUESTIONS_PER_APPROACH}
-      </p>
-      <p className="text-2xl text-gray-700 mt-[60px]" style={{ marginTop: '60px' }}>
-        Time Taken: {formatTime(elapsedTime)}
-      </p>
+    <div className="flex flex-col gap-4 bg-background items-center min-h-screen p-6">
+      <h1 className="text-3xl font-bold text-primary mt-20">✅ Task {task} Completed</h1>
+      <p className="text-2xl text-light">Score: {score} / {QUESTIONS_PER_APPROACH}</p>
+      <p className="text-lg text-gray-400">Time Taken: {formatTime(elapsedTime)}</p>
 
-      <div className="flex flex-col md:flex-row gap-6 mt-[60px]">
+      <div className="flex flex-col md:flex-row gap-4 mt-10">
         <button
           onClick={handleRetry}
-          style={{ marginTop: '60px' }}
-          className="bg-primary text-dark text-xl md:text-2xl px-6 py-3 rounded-xl shadow hover:bg-opacity-90 transition"
+          className="bg-primary text-dark text-lg px-6 py-2 rounded-xl hover:bg-opacity-90 transition"
         >
-          Practice Again
+          🔁 Retry Task
         </button>
 
-        {isLastApproach ? (
+        <button
+          onClick={() => window.location.href = `/challenge/math/day/${day}`}
+          className="bg-secondary text-white text-lg px-6 py-2 rounded-xl hover:bg-opacity-90 transition"
+        >
+          📋 Back to Day {day}
+        </button>
+
+        {!isLastTask && (
           <button
-            style={{ marginTop: '60px' }}
-            onClick={() => window.location.href = '/challenge'}
-            className="bg-red-600 text-white text-xl md:text-2xl px-6 py-3 rounded-xl shadow hover:bg-red-700 transition"
+            onClick={() => window.location.href = `/challenge/math/day/${day}/task/${task + 1}`}
+            className="bg-success text-dark text-lg px-6 py-2 rounded-xl hover:bg-opacity-90 transition"
           >
-            Back to Home
-          </button>
-        ) : (
-          <button
-            onClick={handleNextApproach}
-            style={{ marginTop: '60px' }}
-            className="bg-secondary text-white text-xl md:text-2xl px-6 py-3 rounded-xl shadow hover:bg-green-700 transition"
-          >
-            Next Approach
+            ⏭️ Next Task
           </button>
         )}
       </div>
@@ -156,54 +139,31 @@ const QuizClient: React.FC = () => {
 
   if (!started) {
     return (
-  <div className="relative min-h-screen bg-background flex flex-col gap-y-20 ">
-  <p className="w-full text-center text-3xl text-light" style={{ marginTop: '120px' }}>
-    Task {approachIndex + 1} of {generators.length}
-  </p>
-
-  <div className=" w-full flex justify-center" style={{ marginTop: '120px' }}>
-    <button
-      onClick={startApproach}
-      className="bg-primary text-dark text-2xl md:text-3xl px-6 py-3 rounded-xl shadow hover:bg-[#e08e0b] transition"
-    >
-      Start Task {approachIndex + 1}
-    </button>
-  </div>
-</div>
-
-
+      <div className="min-h-screen flex flex-col justify-center items-center bg-background text-light">
+        <h2 className="text-3xl font-semibold mb-6">Task {task} of Day {day}</h2>
+        <button
+          onClick={startApproach}
+          className="bg-primary text-dark text-2xl px-6 py-3 rounded-xl shadow hover:bg-opacity-90 transition"
+        >
+          🚀 Start Task {task}
+        </button>
+      </div>
     );
   }
 
   return (
-    <div className="flex flex-col  items-center bg-background  justify-center p-4">
-      <div>
-       <p
-  className="flex flex-col justify-center items-center text-3xl text-Dark-blue font-semibold"
-  style={{ marginTop: '40px' }}
->
-  Approach {approachIndex + 1}
-</p>
+    <div className="flex flex-col items-center justify-center min-h-screen bg-background text-light p-4">
+      <h2 className="text-2xl font-semibold mb-2">Day {day} - Task {task}</h2>
+      <p className="text-xl mb-1">Question {questionNumber} / {QUESTIONS_PER_APPROACH}</p>
+      <p className="text-sm text-gray-400 mb-4">Time: {formatTime(elapsedTime)}</p>
 
-      <p className="text-3xl mt-2 text-Dark-blue font-semibold" style={{ marginTop: '20px' }}
->
-        Question {questionNumber} /{" "}
-        {QUESTIONS_PER_APPROACH}
-      </p>
-      </div>
-      <p className="text-xl text-gray-600" style={{ marginTop: '20px' }}
->Time: {formatTime(elapsedTime)}</p>
-      <div className="flex  flex-col items-center gap-6">
-        <p className="text-4xl font-bold select-none text-Black" style={{ marginTop: '20px' }}
->
-          {number1} {operator} {number2} = ?
-        </p>
+      <div className="bg-dark border border-gray-700 p-6 rounded-xl shadow-lg flex flex-col items-center">
+        <p className="text-4xl font-bold mb-4">{number1} {operator} {number2} = ?</p>
         <input
           type="number"
           value={tempAnswer ?? ""}
           onChange={handleChange}
-          style={{ width: '160px', marginTop: '40px' }}
-          className="border-2 border-Dark-blue text-black text-3xl text-center w-24 rounded focus:outline-none focus:ring-2 focus:ring-Dark-blue/50"
+          className="text-3xl text-dark text-center border border-gray-300 rounded-lg p-2 w-32"
           autoFocus
         />
       </div>
@@ -212,3 +172,4 @@ const QuizClient: React.FC = () => {
 };
 
 export default QuizClient;
+
