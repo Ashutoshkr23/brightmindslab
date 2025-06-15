@@ -1,6 +1,7 @@
 'use client';
 
 import { use } from 'react';
+import { englishRulesData } from '@/lib/englishRules';
 
 export default function EnglishReviseConceptPage({
   params,
@@ -10,6 +11,8 @@ export default function EnglishReviseConceptPage({
   const { day, task } = use(params);
   const dayNumber = parseInt(day);
   const taskNumber = parseInt(task);
+  const ruleContent = englishRulesData[dayNumber]?.[taskNumber] || '';
+
 
   return (
     <main className="min-h-screen bg-background text-light p-6 flex flex-col items-center">
@@ -23,10 +26,10 @@ export default function EnglishReviseConceptPage({
       </div>
 
       <section className="bg-dark p-6 rounded-xl w-full max-w-3xl border border-gray-700 shadow-lg">
-        <h2 className="text-xl font-semibold text-white mb-4">Grammar Rule Title</h2>
-        <p className="text-gray-300 leading-relaxed">
-          This is a placeholder explanation for Day {dayNumber}, Rule {taskNumber}. Insert grammar rules, examples, or animated explainers here.
-        </p>
+        <h2 className="text-xl font-semibold text-white mb-4">Grammar Rule</h2>
+        <pre className="text-gray-300 whitespace-pre-wrap leading-relaxed">
+          {String(ruleContent)}
+        </pre>
 
         <div className="mt-6 text-center">
           <button
@@ -40,3 +43,4 @@ export default function EnglishReviseConceptPage({
     </main>
   );
 }
+
