@@ -18,7 +18,7 @@ export default function EnglishReviseConceptPage({
           📘 Day {dayNumber} - Rule {taskNumber}
         </h1>
         <p className="text-gray-400 text-lg">
-          Let's revise the grammar rule for today before jumping into practice!
+          Let&apos;s revise the grammar rule for today before jumping into practice!
         </p>
       </div>
 
