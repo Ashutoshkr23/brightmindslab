@@ -1,6 +1,7 @@
 'use client';
 
 import { use } from 'react';
+import Link from 'next/link';
 
 export default function MathChallengePage({
   params,
@@ -24,27 +25,35 @@ export default function MathChallengePage({
 
       {/* Tasks Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-4xl">
-        {Array.from({ length: 4 }).map((_, index) => (
-          <div
-            key={index}
-            className="bg-dark border border-gray-700 rounded-xl p-6 shadow hover:shadow-xl transition"
-          >
-            <h2 className="text-xl font-semibold text-white mb-4">
-              Task {index + 1}
-            </h2>
+        {Array.from({ length: 4 }).map((_, index) => {
+          const taskNumber = index + 1;
+          return (
+            <div
+              key={index}
+              className="bg-dark border border-gray-700 rounded-xl p-6 shadow hover:shadow-xl transition"
+            >
+              <h2 className="text-xl font-semibold text-white mb-4">
+                Task {taskNumber}
+              </h2>
 
-            <div className="flex flex-col gap-4">
-              <button className="bg-success text-dark px-4 py-2 rounded-lg hover:opacity-90 transition">
-                🚀 Start Practice
-              </button>
+              <div className="flex flex-col gap-4">
+                <Link href={`/challenge/math/day/${dayNumber}/task/${taskNumber}`}>
+                  <button className="bg-success text-dark px-4 py-2 rounded-lg hover:opacity-90 transition w-full">
+                    🚀 Start Practice
+                  </button>
+                </Link>
 
-              <button className="bg-secondary text-white px-4 py-2 rounded-lg hover:opacity-90 transition">
-                📚 Revise Concept
-              </button>
+                <Link href={`/challenge/math/day/${dayNumber}/revise/${taskNumber}`}>
+                  <button className="bg-secondary text-white px-4 py-2 rounded-lg hover:opacity-90 transition w-full">
+                    📚 Revise Concept
+                  </button>
+                </Link>
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </main>
   );
 }
+
