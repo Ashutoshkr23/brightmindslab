@@ -30,7 +30,7 @@ export default function Home() {
             src="/logo01.png"
             width={320}
             height={160}
-            alt="QRE Mastery Logo"
+            alt="QRE Mastery Logo - Quick Calculation, Reasoning & English"
           />
         </div>
 
