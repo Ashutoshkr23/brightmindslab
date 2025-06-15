@@ -5,12 +5,10 @@ const withPWA = require("next-pwa")({
   disable: process.env.NODE_ENV === "development", // Disable in dev mode
 });
 
-module.exports = withPWA({
+/** @type {import('next').NextConfig} */
+const nextConfig = {
   reactStrictMode: true,
-});
-module.exports = {
-  experimental: {
-    missingSuspenseWithCSRBailout: false,
-  },
-}
+};
+
+module.exports = withPWA(nextConfig);
 

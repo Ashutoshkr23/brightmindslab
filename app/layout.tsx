@@ -1,17 +1,6 @@
 import type { Metadata, Viewport } from "next";
 //import Script from "next/script";
-import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
 
 // ✅ Theme color for mobile browser
 export const viewport: Viewport = {
@@ -72,7 +61,7 @@ export default function RootLayout({
         
         
       </head>
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+      <body className="antialiased">
         {children}
           {/* <script type='text/javascript' src='//pl26878204.profitableratecpm.com/bc/d4/89/bcd489d0515736de627f9815fe198cc3.js'></script>*/}
        
