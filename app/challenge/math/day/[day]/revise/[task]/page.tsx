@@ -18,7 +18,7 @@ export default function ReviseConceptPage({
           📚 Day {dayNumber} - Task {taskNumber} Concept
         </h1>
         <p className="text-gray-400 text-lg">
-          Here's the concept explanation for this task. Understand it before you begin practice!
+          Here&apos;s the concept explanation for this task. Understand it before you begin practice!
         </p>
       </div>
 
