@@ -16,6 +16,7 @@ const Dashboard = () => {
   const navigateToPreviousChallenge = (challenge: string) => {
     if (selectedDay) {
       alert(`Navigating to Day ${selectedDay} of ${challenge}`);
+      console.log(setRulesChallengeProgress, setSpeedMathProgress)
     }
   };
 
@@ -51,7 +52,7 @@ const Dashboard = () => {
             <button className="bg-gray-500 px-6 py-2 rounded text-white">View Progress</button>
           </div>
           <p className="text-xs mt-2 text-gray-500">
-            Day 7 will unlock after completing today's task.
+            Day 7 will unlock after completing today&apos;s task.
           </p>
           {/* Button to open day selector */}
           <button
@@ -84,7 +85,7 @@ const Dashboard = () => {
             <button className="bg-gray-500 px-6 py-2 rounded text-white">View Progress</button>
           </div>
           <p className="text-xs mt-2 text-gray-500">
-            Day 7 will unlock after completing today's rule.
+            Day 7 will unlock after completing today&aposs rule.
           </p>
           {/* Button to open day selector */}
           <button
