@@ -2,9 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { auth } from '@/lib/firebase';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 const Dashboard = () => {
   const router = useRouter();
+
+  const [userName, setUserName] = useState('User');
   const [speedMathProgress, setSpeedMathProgress] = useState(1);
   const [rulesChallengeProgress, setRulesChallengeProgress] = useState(1);
   const [showDaySelector, setShowDaySelector] = useState(false);
@@ -23,6 +28,22 @@ const Dashboard = () => {
     localStorage.setItem('rulesChallengeProgress', rulesChallengeProgress.toString());
   }, [speedMathProgress, rulesChallengeProgress]);
 
+  useEffect(() => {
+    const fetchUserName = async () => {
+      const user = auth.currentUser;
+      if (user) {
+        const userRef = doc(db, 'users', user.uid);
+        const snap = await getDoc(userRef);
+        if (snap.exists()) {
+          const data = snap.data();
+          setUserName(data.name || 'User');
+        }
+      }
+    };
+
+    fetchUserName();
+  }, []);
+
   const handleContinueChallenge = (type: 'math' | 'rules', day: number) => {
     router.push(`/challenge/${type}/day/${day}`);
   };
@@ -35,10 +56,9 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen bg-background text-light flex flex-col">
       <header className="bg-dark text-light p-6 flex justify-between items-center">
-        <div className="text-2xl font-bold">Welcome back, Alex!</div>
+        <div className="text-2xl font-bold">Welcome back, {userName}!</div>
         <div className="text-sm">Day {speedMathProgress} of Math | Rule {rulesChallengeProgress}</div>
       </header>
-
       <main className="flex-grow p-6 space-y-8">
         {/* Speed Math Challenge */}
         <div className="bg-gray-800 rounded-xl p-6 shadow-lg">
@@ -113,11 +133,15 @@ const Dashboard = () => {
           </div>
         </div>
       )}
+      {/* The rest of your dashboard content remains the same */}
+      {/* ... */}
+
     </div>
   );
 };
 
 export default Dashboard;
+
 
 
 
