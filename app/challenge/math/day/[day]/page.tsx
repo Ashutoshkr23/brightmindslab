@@ -2,6 +2,7 @@
 
 import { use } from 'react';
 import Link from 'next/link';
+import { getNotesForDay } from '@/lib/mathNotes';
 
 export default function MathChallengePage({
   params,
@@ -10,6 +11,8 @@ export default function MathChallengePage({
 }) {
   const { day } = use(params);
   const dayNumber = parseInt(day);
+
+  const notes = getNotesForDay(dayNumber);
 
   return (
     <main className="min-h-screen bg-background text-light p-6 flex flex-col items-center">
@@ -27,14 +30,17 @@ export default function MathChallengePage({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-4xl">
         {Array.from({ length: 4 }).map((_, index) => {
           const taskNumber = index + 1;
+          const taskTitle = notes[index]?.title || `Task ${taskNumber}`;
+
           return (
             <div
               key={index}
               className="bg-dark border border-gray-700 rounded-xl p-6 shadow hover:shadow-xl transition"
             >
-              <h2 className="text-xl font-semibold text-white mb-4">
+              <h2 className="text-xl font-semibold text-white mb-1">
                 Task {taskNumber}
               </h2>
+              <p className="text-sm text-gray-400 mb-4">{taskTitle}</p>
 
               <div className="flex flex-col gap-4">
                 <Link href={`/challenge/math/day/${dayNumber}/task/${taskNumber}`}>

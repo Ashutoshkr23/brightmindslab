@@ -42,7 +42,7 @@ export const getNotesForDay = (day: number): NoteData[] => {
           ].join("\n"),
         },
         {
-          title: "Multiplication with 29 and 2 (Trick Method)",
+          title: "Table of 29 and 2 (Trick Method)",
           content: [
             "- For 29 × N: use shortcut → (30 × N) - N.",
             "- Example: 29 × 6 = 180 - 6 = 174.",
