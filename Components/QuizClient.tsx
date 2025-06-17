@@ -139,35 +139,68 @@ const QuizClient = () => {
 
   if (!started) {
     return (
-      <div className="min-h-screen flex flex-col gap-y-8  items-center bg-background text-light">
-        <h2 className="text-3xl mt-20 font-semibold mb-6">Task {taskNumber} of Day {dayNumber}</h2>
-        <button
-          onClick={startApproach}
-          className="bg-primary text-dark text-2xl px-6 py-3 rounded-xl shadow hover:bg-opacity-90 transition"
-        >
-          🚀 Start Task {taskNumber}
-        </button>
-      </div>
+  <div className="min-h-screen flex flex-col gap-y-8 items-center bg-background text-light" style={{ height: '100vh', paddingTop: '5rem', paddingBottom: '5rem' }}>
+  <h2 className="text-3xl font-semibold" style={{ marginTop: '1rem', marginBottom: '1.5rem' }}>
+    Task {taskNumber} of Day {dayNumber}
+  </h2>
+  <button
+    onClick={startApproach}
+    className="bg-primary text-dark text-2xl rounded-xl shadow hover:bg-opacity-90 transition"
+    style={{ padding: '0.75rem 1.5rem' }}
+  >
+    🚀 Start Task {taskNumber}
+  </button>
+</div>
+
     );
   }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-background text-light p-4">
-      <h2 className="text-2xl font-semibold mb-2">Day {dayNumber} - Task {taskNumber}</h2>
-      <p className="text-xl mb-1">Question {questionNumber} / {QUESTIONS_PER_APPROACH}</p>
-      <p className="text-sm text-gray-400 mb-4">Time: {formatTime(elapsedTime)}</p>
+    <div
+  className="flex flex-col items-center  bg-background text-light p-4"
+  style={{ height: '100vh', padding: '1rem' }}
+>
+  <h2
+    className="text-2xl font-semibold"
+    style={{ marginBottom: '0.5rem' }}
+  >
+    Day {dayNumber} - Task {taskNumber}
+  </h2>
+  <p
+    className="text-xl"
+    style={{ marginBottom: '0.25rem' }}
+  >
+    Question {questionNumber} / {QUESTIONS_PER_APPROACH}
+  </p>
+  <p
+    className="text-sm text-gray-400"
+    style={{ marginBottom: '1rem' }}
+  >
+    Time: {formatTime(elapsedTime)}
+  </p>
 
-      <div className="bg-dark border w-full border-gray-700 m-6 p-6 rounded-xl shadow-lg flex flex-col items-center">
-        <p className="text-4xl font-bold mb-4">{number1} {operator} {number2} = ?</p>
-        <input
-          type="number"
-          value={tempAnswer ?? ""}
-          onChange={handleChange}
-          className="text-3xl text-dark w-full text-center border border-gray-300 rounded-lg p-2 "
-          autoFocus
-        />
-      </div>
-    </div>
+  <div
+    className="bg-dark border w-full border-gray-700 rounded-xl shadow-lg flex flex-col items-center"
+    style={{ margin: '1.5rem', padding: '1.5rem' }}
+  >
+    <p
+      className="text-4xl font-bold"
+      style={{ marginBottom: '1rem' }}
+    >
+      {number1} {operator} {number2} = ?
+    </p>
+    <input
+      type="number"
+      value={tempAnswer ?? ""}
+      onChange={handleChange}
+      className="text-3xl text-dark w-full text-center border border-gray-300 rounded-lg"
+      style={{ padding: '0.5rem' }}
+      autoFocus
+    />
+  </div>
+</div>
+
+
   );
 };
 
