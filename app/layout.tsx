@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import Script from "next/script"; // ✅ Required for GA
+import Script from "next/script";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -47,9 +47,9 @@ export default function RootLayout({
           crossOrigin="anonymous"
         ></script>
 
-        {/* ✅ Google Analytics */}
+        {/* ✅ Google Analytics with correct tag */}
         <Script
-          src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"
+          src="https://www.googletagmanager.com/gtag/js?id=G-4EH7MD1Q0E"
           strategy="afterInteractive"
         />
         <Script id="google-analytics" strategy="afterInteractive">
@@ -57,7 +57,7 @@ export default function RootLayout({
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
             gtag('js', new Date());
-            gtag('config', 'G-11357474872');
+            gtag('config', 'G-4EH7MD1Q0E');
           `}
         </Script>
       </head>
@@ -68,4 +68,3 @@ export default function RootLayout({
     </html>
   );
 }
-
