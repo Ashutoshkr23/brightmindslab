@@ -3,15 +3,23 @@
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { signInWithPopup } from 'firebase/auth';
-import { auth, provider } from '@/lib/firebase';
+import { doc, getDoc } from 'firebase/firestore';
+import { auth, provider, db } from '@/lib/firebase';
 
 export default function Home() {
   const router = useRouter();
 
   const handleGoogleAuth = async () => {
     try {
-      await signInWithPopup(auth, provider);
-      router.push('/dashboard'); // direct to dashboard after login
+      const res = await signInWithPopup(auth, provider);
+      const user = res.user;
+      const userRef = doc(db, 'users', user.uid);
+      const snap = await getDoc(userRef);
+      if (!snap.exists() || !snap.data()?.onboardingComplete) {
+        router.push('/onboarding');
+      } else {
+        router.push('/dashboard');
+      }
     } catch (err) {
       console.error('Google sign-in error:', err);
     }
