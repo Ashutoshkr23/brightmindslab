@@ -3,27 +3,26 @@
 import { useState, useEffect } from 'react';
 import { useRouter }           from 'next/navigation';
 import Link                    from 'next/link';
-import { auth, provider, db } from '@/lib/firebase';
+import { auth, provider, db }  from '@/lib/firebase';
 import { signInWithPopup }     from 'firebase/auth';
 import { doc, getDoc }         from 'firebase/firestore';
 
 export default function NavBar() {
   const router = useRouter();
-  const [menuOpen, setMenuOpen]   = useState(false);
-  const [signedIn, setSignedIn]   = useState(false);
-  const [userName, setUserName]   = useState('User');
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [signedIn, setSignedIn] = useState(false);
+  const [userName, setUserName] = useState('User');
 
   // Watch auth state and load userName
   useEffect(() => {
     const unsub = auth.onAuthStateChanged(async (user) => {
       if (user) {
         setSignedIn(true);
-        // fetch their name
         try {
           const snap = await getDoc(doc(db, 'users', user.uid));
           if (snap.exists()) setUserName(snap.data().name || 'User');
-        } catch (_) {
-          console.error('Could not fetch user profile');
+        } catch (error) {
+          console.error('Could not fetch user profile', error);
         }
       } else {
         setSignedIn(false);
@@ -38,24 +37,20 @@ export default function NavBar() {
     try {
       const result = await signInWithPopup(auth, provider);
       const user   = result.user;
-      // Check if onboarding profile exists
-      const snap = await getDoc(doc(db, 'users', user.uid));
-      if (snap.exists()) {
-        router.replace('/dashboard');
-      } else {
-        router.replace('/onboarding');
-      }
-    } catch (err) {
-      console.error('Sign-in error', err);
+      const snap   = await getDoc(doc(db, 'users', user.uid));
+      if (snap.exists()) router.replace('/dashboard');
+      else               router.replace('/onboarding');
+    } catch (error) {
+      console.error('Sign-in error', error);
     }
   };
 
   const links = [
-    { href: '/profile', label: 'Profile',   auth: true  },
+    { href: '/profile', label: 'Profile',         auth: true  },
     { href: '/enrolled', label: 'Enrolled Courses', auth: true },
-    { href: '/about',   label: 'About Us',  auth: false },
+    { href: '/about',   label: 'About Us',        auth: false },
     { href: '/terms',   label: 'Terms & Conditions', auth: false },
-    { href: '/refund',  label: 'Refund Policy', auth: false },
+    { href: '/refund',  label: 'Refund Policy',   auth: false },
   ];
 
   return (
@@ -66,8 +61,8 @@ export default function NavBar() {
 
         {/* Desktop Links */}
         <div className="hidden md:flex items-center space-x-6">
-          {links.map(({ href, label, auth: requiresAuth }) =>
-            (!requiresAuth || signedIn) ? (
+          {links.map(({ href, label, auth: requiresAuth }) => (
+            (!requiresAuth || signedIn) && (
               <Link
                 key={href}
                 href={href}
@@ -75,42 +70,40 @@ export default function NavBar() {
               >
                 {label}
               </Link>
-            ) : null
-          )}
+            )
+          ))}
 
-          {signedIn ? (
-            <button
-              onClick={() => auth.signOut()}
-              className="ml-4 bg-background hover:bg-background/80 text-primary px-4 py-2 rounded-2xl transition"
-            >
-              Log Out
-            </button>
-          ) : (
-            <button
-              onClick={handleSignIn}
-              className="ml-4 bg-primary hover:bg-primary/90 text-dark px-4 py-2 rounded-2xl transition"
-            >
-              Log In
-            </button>
-          )}
+          {signedIn
+            ? <button
+                onClick={() => auth.signOut()}
+                className="ml-4 bg-background hover:bg-background/80 text-primary px-4 py-2 rounded-2xl"
+              >
+                Log Out
+              </button>
+            : <button
+                onClick={handleSignIn}
+                className="ml-4 bg-primary hover:bg-primary/90 text-dark px-4 py-2 rounded-2xl"
+              >
+                Log In
+              </button>
+          }
         </div>
 
         {/* Mobile Hamburger */}
         <button
-          className="md:hidden p-2 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+          className="md:hidden p-2 rounded focus:outline-none focus:ring-2 focus:ring-primary"
           onClick={() => setMenuOpen(o => !o)}
         >
-          {menuOpen ? (
-            <svg className="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          ) : (
-            <svg className="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                d="M4 8h16M4 16h16" />
-            </svg>
-          )}
+          {menuOpen
+            ? <svg className="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"/>
+              </svg>
+            : <svg className="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                  d="M4 8h16M4 16h16"/>
+              </svg>
+          }
         </button>
       </div>
 
@@ -118,8 +111,8 @@ export default function NavBar() {
       {menuOpen && (
         <div className="md:hidden bg-dark border-t border-secondary">
           <div className="px-6 py-4 space-y-2">
-            {links.map(({ href, label, auth: requiresAuth }) =>
-              (!requiresAuth || signedIn) ? (
+            {links.map(({ href, label, auth: requiresAuth }) => (
+              (!requiresAuth || signedIn) && (
                 <Link
                   key={href}
                   href={href}
@@ -128,24 +121,23 @@ export default function NavBar() {
                 >
                   {label}
                 </Link>
-              ) : null
-            )}
+              )
+            ))}
 
-            {signedIn ? (
-              <button
-                onClick={() => { setMenuOpen(false); auth.signOut(); }}
-                className="w-full text-left px-3 py-2 rounded-md hover:bg-background transition"
-              >
-                Log Out
-              </button>
-            ) : (
-              <button
-                onClick={() => { setMenuOpen(false); handleSignIn(); }}
-                className="w-full text-left px-3 py-2 bg-primary text-dark rounded-2xl hover:bg-primary/90 transition"
-              >
-                Log In
-              </button>
-            )}
+            {signedIn
+              ? <button
+                  onClick={() => { setMenuOpen(false); auth.signOut(); }}
+                  className="w-full text-left px-3 py-2 rounded-md hover:bg-background"
+                >
+                  Log Out
+                </button>
+              : <button
+                  onClick={() => { setMenuOpen(false); handleSignIn(); }}
+                  className="w-full text-left px-3 py-2 bg-primary text-dark rounded-2xl hover:bg-primary/90"
+                >
+                  Log In
+                </button>
+            }
           </div>
         </div>
       )}

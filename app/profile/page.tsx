@@ -1,35 +1,48 @@
+// app/profile/page.tsx
 'use client';
 
 import { useState, useEffect } from 'react';
 import { useRouter }          from 'next/navigation';
 import { auth, db }           from '@/lib/firebase';
-import { doc, getDoc }        from 'firebase/firestore';
+import { doc, getDoc, Timestamp } from 'firebase/firestore';
+
+interface Profile {
+  name: string;
+  preparingFor: string;
+  englishFocus: string;
+  practiceTime?: string;
+  notifications: {
+    email: boolean;
+    push:  boolean;
+  };
+  interfaceLanguage: string;
+  joinedAt: Timestamp;
+}
 
 export default function ProfilePage() {
   const router = useRouter();
-  const [loading, setLoading]       = useState(true);
-  const [profile, setProfile]       = useState<any>(null);
+  const [loading, setLoading]     = useState(true);
+  const [profile, setProfile]     = useState<Profile | null>(null);
 
-  // 1️⃣ Require sign-in and fetch profile
   useEffect(() => {
     const unsub = auth.onAuthStateChanged(async (user) => {
       if (!user) {
         router.replace('/login');
         return;
       }
-      const ref = doc(db, 'users', user.uid);
+      const ref  = doc(db, 'users', user.uid);
       const snap = await getDoc(ref);
       if (!snap.exists()) {
         router.replace('/onboarding');
         return;
       }
-      setProfile(snap.data());
+      setProfile(snap.data() as Profile);
       setLoading(false);
     });
     return () => unsub();
   }, [router]);
 
-  if (loading) {
+  if (loading || !profile) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <p className="text-light">Loading profile…</p>
@@ -56,25 +69,21 @@ export default function ProfilePage() {
           <p><strong>Name:</strong> {name}</p>
           <p><strong>Preparing For:</strong> {preparingFor}</p>
           <p><strong>English Focus:</strong> {englishFocus}</p>
-          {practiceTime && (
-            <p><strong>Practice Time:</strong> {practiceTime}</p>
-          )}
+          {practiceTime && <p><strong>Practice Time:</strong> {practiceTime}</p>}
           <p>
             <strong>Notifications:</strong>{' '}
-            {notifications?.email ? 'Email ' : ''} 
-            {notifications?.push ? 'Push' : ''} 
-            {!notifications?.email && !notifications?.push && 'None'}
+            {notifications.email && 'Email '}
+            {notifications.push  && 'Push'}
+            {!notifications.email && !notifications.push && 'None'}
           </p>
           <p><strong>Interface Language:</strong> {interfaceLanguage}</p>
-          {joinedAt && (
-            <p>
-              <strong>Joined:</strong>{' '}
-              {new Date(joinedAt.seconds * 1000).toLocaleDateString()}
-            </p>
-          )}
+          <p>
+            <strong>Joined:</strong>{' '}
+            {joinedAt.toDate().toLocaleDateString()}
+          </p>
         </div>
 
-        <div className="flex justify-end space-x-4">
+        <div className="flex justify-end">
           <button
             onClick={() => auth.signOut()}
             className="bg-danger hover:bg-danger/90 text-white px-4 py-2 rounded-xl transition"
