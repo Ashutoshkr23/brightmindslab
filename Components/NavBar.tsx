@@ -179,14 +179,13 @@ export default function NavBar() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '16px 24px' }}>
             {links.map(({ href, label, auth: requiresAuth }) =>
               (!requiresAuth || signedIn) && (
-                <Link
+                <Link className='bg-white'
                   key={href}
                   href={href}
                   style={{
                     display:       'block',
                     padding:       '8px 12px',
                     borderRadius:  '8px',
-                    color:         '#EAEAEA',
                     textDecoration:'none'
                   }}
                   onClick={() => setMenuOpen(false)}
