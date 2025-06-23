@@ -9,29 +9,37 @@ import { doc, getDoc }         from 'firebase/firestore';
 
 export default function NavBar() {
   const router = useRouter();
+
+  // 1️⃣ Track mobile vs desktop from the very first render
+  const [isMobile, setIsMobile] = useState<boolean>(
+    () => typeof window !== 'undefined' && window.innerWidth < 768
+  );
+
+  // 2️⃣ Menu open & auth state
   const [menuOpen, setMenuOpen] = useState(false);
   const [signedIn, setSignedIn] = useState(false);
-  const [userName, setUserName] = useState('User');
-  const [isMobile, setIsMobile] = useState(false);
 
-  // ❶ Track window width for responsive layout
+  // 3️⃣ userName starts blank — we won't show "User" until we've run onAuthStateChanged
+  const [userName, setUserName] = useState<string>('');
+
+  // — Update isMobile on resize
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
-    handleResize();
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // ❷ Watch auth state and load userName
+  // — Watch auth, fetch or default the name
   useEffect(() => {
     const unsub = auth.onAuthStateChanged(async (user) => {
       if (user) {
         setSignedIn(true);
         try {
           const snap = await getDoc(doc(db, 'users', user.uid));
-          if (snap.exists()) setUserName(snap.data().name || 'User');
-        } catch (error) {
-          console.error('Could not fetch user profile', error);
+          setUserName(snap.exists() ? snap.data().name || 'User' : 'User');
+        } catch (err) {
+          console.error('Could not fetch user profile', err);
+          setUserName('User');
         }
       } else {
         setSignedIn(false);
@@ -41,14 +49,14 @@ export default function NavBar() {
     return () => unsub();
   }, []);
 
-  // ❸ Handle sign-in & redirect on first login
+  // — Sign in & redirect logic
   const handleSignIn = async () => {
     try {
       const { user } = await signInWithPopup(auth, provider);
       const snap = await getDoc(doc(db, 'users', user.uid));
       router.replace(snap.exists() ? '/dashboard' : '/onboarding');
-    } catch (error) {
-      console.error('Sign-in error', error);
+    } catch (err) {
+      console.error('Sign-in error', err);
     }
   };
 
@@ -60,47 +68,20 @@ export default function NavBar() {
     { href: '/refund',  label: 'Refund Policy',   auth: false },
   ];
 
-  // ❹ Inline styles for spacing & responsive
+  // Inline styles for nav container
   const navStyle = {
-    backgroundColor: '#111827',            // dark
-    color: '#EAEAEA',                      // light
-    borderBottom: '1px solid #3498DB',     // secondary
+    backgroundColor: '#111827',
+    color:           '#EAEAEA',
+    borderBottom:    '1px solid #3498DB'
   };
 
   const containerStyle = {
-    maxWidth: '1024px',
-    margin: '0 auto',
-    display: 'flex',
-    alignItems: 'center',
+    maxWidth:    '1024px',
+    margin:      '0 auto',
+    display:     'flex',
+    alignItems:  'center',
     justifyContent: 'space-between',
-    padding: '16px 24px',                  // py-4 px-6
-  };
-
-  const desktopLinksStyle = {
-    display: isMobile ? 'none' : 'flex',
-    gap: '24px',                            // space-x-6
-    alignItems: 'center',
-  };
-
-  const mobileHamburgerStyle = {
-    display: isMobile ? 'block' : 'none',
-    padding: '8px',                         // roughly p-2
-    cursor: 'pointer',
-  };
-
-  const mobileMenuStyle = {
-    display: menuOpen && isMobile ? 'block' : 'none',
-    backgroundColor: '#111827',
-    borderTop: '1px solid #3498DB',
-    padding: '16px 24px',
-  };
-
-  const mobileLinkStyle = {
-    display: 'block',
-    padding: '8px 12px',                    // py-2 px-3
-    borderRadius: '8px',
-    textDecoration: 'none',
-    color: '#EAEAEA',
+    padding:     '16px 24px'
   };
 
   return (
@@ -112,108 +93,144 @@ export default function NavBar() {
         </div>
 
         {/* Desktop Links */}
-        <div style={desktopLinksStyle}>
-          {links.map(({ href, label, auth: requiresAuth }) =>
-            (!requiresAuth || signedIn) && (
-              <Link
-                key={href}
-                href={href}
-                style={{ color: '#EAEAEA', textDecoration: 'none' }}
-              >
-                {label}
-              </Link>
-            )
-          )}
-
-          {signedIn
-            ? <button
+        {!isMobile && (
+          <div style={{ display: 'flex', gap: '24px', alignItems: 'center' }}>
+            {links.map(({ href, label, auth: requiresAuth }) =>
+              (!requiresAuth || signedIn) && (
+                <Link
+                  key={href}
+                  href={href}
+                  style={{ color: '#EAEAEA', textDecoration: 'none' }}
+                >
+                  {label}
+                </Link>
+              )
+            )}
+            {signedIn ? (
+              <button
                 onClick={() => auth.signOut()}
                 style={{
-                  marginLeft: '16px',
-                  padding: '8px 16px',
-                  backgroundColor: '#1F2937',    // background
-                  color: '#EAEAEA',
-                  border: 'none',
-                  borderRadius: '12px',
-                  cursor: 'pointer'
+                  marginLeft:    '16px',
+                  padding:       '8px 16px',
+                  backgroundColor: '#1F2937',
+                  color:         '#EAEAEA',
+                  border:        'none',
+                  borderRadius:  '12px',
+                  cursor:        'pointer'
                 }}
               >
                 Log Out
               </button>
-            : <button
+            ) : (
+              <button
                 onClick={handleSignIn}
                 style={{
-                  marginLeft: '16px',
-                  padding: '8px 16px',
-                  backgroundColor: '#F39C12',    // primary
-                  color: '#111827',               // dark
-                  border: 'none',
-                  borderRadius: '12px',
-                  cursor: 'pointer'
+                  marginLeft:    '16px',
+                  padding:       '8px 16px',
+                  backgroundColor: '#F39C12',
+                  color:         '#111827',
+                  border:        'none',
+                  borderRadius:  '12px',
+                  cursor:        'pointer'
                 }}
               >
                 Log In
               </button>
-          }
-        </div>
+            )}
+          </div>
+        )}
 
         {/* Mobile Hamburger */}
-        <div style={mobileHamburgerStyle} onClick={() => setMenuOpen(o => !o)}>
-          {menuOpen
-            ? <svg className="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            : <svg className="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                  d="M4 8h16M4 16h16" />
-              </svg>
-          }
-        </div>
+        {isMobile && (
+          <div
+            onClick={() => setMenuOpen(o => !o)}
+            style={{ padding: '8px', cursor: 'pointer' }}
+          >
+            <svg
+              style={{ color: '#EAEAEA' }}
+              className="h-6 w-6"
+              stroke="currentColor"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              {menuOpen ? (
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              ) : (
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 8h16M4 16h16"
+                />
+              )}
+            </svg>
+          </div>
+        )}
       </div>
 
       {/* Mobile Menu */}
-      <div style={mobileMenuStyle}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          {links.map(({ href, label, auth: requiresAuth }) =>
-            (!requiresAuth || signedIn) && (
-              <Link
-                key={href}
-                href={href}
-                style={mobileLinkStyle}
-                onClick={() => setMenuOpen(false)}
-              >
-                {label}
-              </Link>
-            )
-          )}
-
-          {signedIn
-            ? <button
+      {isMobile && menuOpen && (
+        <div style={{ backgroundColor: '#111827', borderTop: '1px solid #3498DB' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '16px 24px' }}>
+            {links.map(({ href, label, auth: requiresAuth }) =>
+              (!requiresAuth || signedIn) && (
+                <Link
+                  key={href}
+                  href={href}
+                  style={{
+                    display:       'block',
+                    padding:       '8px 12px',
+                    borderRadius:  '8px',
+                    color:         '#EAEAEA',
+                    textDecoration:'none'
+                  }}
+                  onClick={() => setMenuOpen(false)}
+                >
+                  {label}
+                </Link>
+              )
+            )}
+            {signedIn ? (
+              <button
                 onClick={() => { setMenuOpen(false); auth.signOut(); }}
                 style={{
-                  ...mobileLinkStyle,
-                  backgroundColor: '#1F2937',
-                  textAlign: 'left',
-                  border: 'none'
+                  width:         '100%',
+                  textAlign:     'left',
+                  padding:       '8px 12px',
+                  borderRadius:  '8px',
+                  backgroundColor:'#1F2937',
+                  color:         '#EAEAEA',
+                  border:        'none',
+                  cursor:        'pointer'
                 }}
               >
                 Log Out
               </button>
-            : <button
+            ) : (
+              <button
                 onClick={() => { setMenuOpen(false); handleSignIn(); }}
                 style={{
-                  ...mobileLinkStyle,
-                  backgroundColor: '#F39C12',
-                  color: '#111827',
-                  border: 'none'
+                  width:         '100%',
+                  textAlign:     'left',
+                  padding:       '8px 12px',
+                  borderRadius:  '12px',
+                  backgroundColor:'#F39C12',
+                  color:         '#111827',
+                  border:        'none',
+                  cursor:        'pointer'
                 }}
               >
                 Log In
               </button>
-          }
+            )}
+          </div>
         </div>
-      </div>
+      )}
     </nav>
   );
 }
