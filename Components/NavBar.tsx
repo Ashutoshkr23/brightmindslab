@@ -63,7 +63,7 @@ export default function NavBar() {
   const links = [
     { href: '/profile', label: 'Profile',         auth: true  },
     { href: '/enrolled', label: 'Enrolled Courses', auth: true },
-    { href: '/about',   label: 'About Us',        auth: false },
+    { href: '/contact',   label: 'Contact Us',        auth: false },
     { href: '/terms',   label: 'Terms & Conditions', auth: false },
     { href: '/refund',  label: 'Refund Policy',   auth: false },
   ];

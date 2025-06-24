@@ -67,7 +67,7 @@ export default function TermsPage() {
         <h2 className="text-2xl font-heading text-secondary">9. Contact Us</h2>
         <p>
           If you have any questions about these terms, please reach out to{' '}
-          <a href="mailto:support@brightminds.com" className="text-primary underline">
+          <a href="mailto:brightmindslab01@gmail.com" className="text-primary underline">
             support@brightminds.com
           </a>.
         </p>
