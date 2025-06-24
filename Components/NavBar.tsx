@@ -10,9 +10,16 @@ import { doc, getDoc }         from 'firebase/firestore';
 export default function NavBar() {
   const router = useRouter();
 
-  // Determine mobile/desktop
-  const [isMobile, setIsMobile] = useState<boolean>(
-    () => typeof window !== 'undefined' && window.innerWidth < 768
+  // showNav flips after 2s
+  const [showNav, setShowNav] = useState(false);
+  useEffect(() => {
+    const timer = setTimeout(() => setShowNav(true), 2000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // detect mobile/desktop
+  const [isMobile, setIsMobile] = useState(() => 
+    typeof window !== 'undefined' && window.innerWidth < 768
   );
   useEffect(() => {
     const onResize = () => setIsMobile(window.innerWidth < 768);
@@ -20,10 +27,10 @@ export default function NavBar() {
     return () => window.removeEventListener('resize', onResize);
   }, []);
 
-  // Auth & menu state
+  // auth + menu state
   const [menuOpen, setMenuOpen] = useState(false);
   const [signedIn, setSignedIn] = useState(false);
-  const [userName, setUserName] = useState<string>('User');
+  const [userName, setUserName] = useState('User');
 
   useEffect(() => {
     const unsub = auth.onAuthStateChanged(async (user) => {
@@ -43,6 +50,7 @@ export default function NavBar() {
     return () => unsub();
   }, []);
 
+  // sign-in logic
   const handleSignIn = async () => {
     try {
       const { user } = await signInWithPopup(auth, provider);
@@ -53,22 +61,30 @@ export default function NavBar() {
     }
   };
 
-  // Links: temporarily commenting out '/enrolled'
+  // links (enrolled commented out)
   const links = [
     { href: '/profile', label: 'Profile',      auth: true  },
-    // { href: '/enrolled', label: 'Enrolled Courses', auth: true }, 
+    // { href: '/enrolled', label: 'Enrolled Courses', auth: true },
     { href: '/contact', label: 'Contact Us',   auth: false },
     { href: '/terms',   label: 'Terms & Conditions', auth: false },
     { href: '/refund',  label: 'Refund Policy', auth: false },
   ];
 
-  // Styles
-  const navStyle = {
+  // nav background always visible
+  const navBackgroundStyle = {
     backgroundColor: '#111827',
     color:           '#EAEAEA',
     borderBottom:    '1px solid #3498DB',
   };
-  const container = {
+
+  // animated inner wrapper
+  const contentStyle = {
+    opacity:    showNav ? 1 : 0,
+    transform:  showNav ? 'translateY(0)' : 'translateY(-10px)',
+    transition: 'opacity 0.6s ease, transform 0.6s ease',
+  };
+
+  const containerStyle = {
     maxWidth:      '1024px',
     margin:        '0 auto',
     display:       'flex',
@@ -78,8 +94,9 @@ export default function NavBar() {
   };
 
   return (
-    <nav style={navStyle}>
-      <div style={container}>
+    <nav style={navBackgroundStyle}>
+      {/* only this div animates in */}
+      <div style={{ ...containerStyle, ...contentStyle }}>
         {/* 1️⃣ User Name */}
         <div style={{ fontSize: '1.5rem', fontFamily: 'Outfit, sans-serif' }}>
           {userName}
@@ -88,8 +105,8 @@ export default function NavBar() {
         {/* 2️⃣ Desktop Links */}
         {!isMobile && (
           <div style={{ display: 'flex', gap: '24px', alignItems: 'center' }}>
-            {links.map(({ href, label, auth: requires }) =>
-              (!requires || signedIn) && (
+            {links.map(({ href, label, auth: req }) =>
+              (!req || signedIn) && (
                 <Link
                   key={href}
                   href={href}
@@ -99,7 +116,6 @@ export default function NavBar() {
                 </Link>
               )
             )}
-
             {signedIn ? (
               <button
                 onClick={() => auth.signOut()}
@@ -172,8 +188,8 @@ export default function NavBar() {
       {isMobile && menuOpen && (
         <div style={{ backgroundColor: '#111827', borderTop: '1px solid #3498DB' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '16px 24px' }}>
-            {links.map(({ href, label, auth: requires }) =>
-              (!requires || signedIn) && (
+            {links.map(({ href, label, auth: req }) =>
+              (!req || signedIn) && (
                 <Link
                   key={href}
                   href={href}
@@ -190,7 +206,6 @@ export default function NavBar() {
                 </Link>
               )
             )}
-
             {signedIn ? (
               <button
                 onClick={() => { setMenuOpen(false); auth.signOut(); }}

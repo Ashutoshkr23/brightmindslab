@@ -2,36 +2,44 @@
 
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { signInWithPopup } from 'firebase/auth';
+import { useEffect }  from 'react';
+import { signInWithPopup, onAuthStateChanged } from 'firebase/auth';
 import { auth, db, provider } from '@/lib/firebase';
 import { getDoc, doc } from 'firebase/firestore';
 
 export default function Home() {
   const router = useRouter();
 
- const handleGoogleAuth = async () => {
+  // 0️⃣ Redirect already‐signed‐in users
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        router.replace('/dashboard');
+      }
+    });
+    return () => unsub();
+  }, [router]);
+
+  // 1️⃣ Handle Google Sign‐In / Onboarding redirect
+  const handleGoogleAuth = async () => {
     try {
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
-      
-      // 1️⃣ See if this user already has a profile in Firestore
       const userDoc = await getDoc(doc(db, 'users', user.uid));
-      
+
       if (userDoc.exists()) {
-        // Already onboarded → go straight to dashboard
         router.replace('/dashboard');
       } else {
-        // First-time login → send to onboarding form
         router.replace('/onboarding');
       }
     } catch (err) {
       console.error('Google sign-in error:', err);
-      // TODO: show a toast/toastr here
     }
   };
 
+  // 2️⃣ Guest explore
   const handleExploreGuest = () => {
-    router.push('/dashboard'); // guest access to dashboard
+    router.push('/dashboard');
   };
 
   return (
@@ -43,7 +51,7 @@ export default function Home() {
             src="/logo01.png"
             width={320}
             height={160}
-            alt="QRE Mastery Logo "
+            alt="QRE Mastery Logo"
           />
         </div>
 
