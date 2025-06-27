@@ -16,11 +16,12 @@ import {
   Timestamp
 } from 'firebase/firestore';
 
-const TOTAL_QUESTIONS = 10;  // testing count
+const TOTAL_CORRECT = 10; // need 10 correct answers
 
 interface FinalAttempt {
   id:            string;
   userId:        string;
+  userName:      string;
   day:           number;
   challengeType: 'final';
   score:         number;
@@ -34,109 +35,130 @@ export default function CompetePage() {
   const { day } = useParams();
   const dayNumber = parseInt(day as string || '1', 10);
 
-  // 1️⃣ Load generators
+  // 1️⃣ load all 4 task generators
   const [generators, setGenerators] = useState<QuestionGenerator[]>([]);
   useEffect(() => {
     setGenerators(getGeneratorsForDay(dayNumber));
   }, [dayNumber]);
 
-  // 2️⃣ Competition state
-  const [started, setStarted]     = useState(false);
-  const [index, setIndex]         = useState(0);
-  const [a, setA]                 = useState(0);
-  const [b, setB]                 = useState(0);
-  const [op, setOp]               = useState('');
-  const [ans, setAns]             = useState(0);
-  const [input, setInput]         = useState('');
-  const [startTime, setStartTime] = useState(0);
-  const [timeTaken, setTimeTaken] = useState(0);
-  const [finished, setFinished]   = useState(false);
+  // 2️⃣ competition state
+  const [started, setStarted]       = useState(false);
+  const [correctCount, setCorrectCount] = useState(0);
+  const [a, setA]                   = useState(0);
+  const [b, setB]                   = useState(0);
+  const [op, setOp]                 = useState('');
+  const [ans, setAns]               = useState(0);
+  const [input, setInput]           = useState('');
+  const [startTime, setStartTime]   = useState(0);
+  const [timeTaken, setTimeTaken]   = useState(0);
+  const [finished, setFinished]     = useState(false);
 
-  // 3️⃣ Leaderboard + recent finals
+  // 3️⃣ leaderboard + recent finals
   const [board, setBoard]           = useState<FinalAttempt[]>([]);
   const [recent, setRecent]         = useState<FinalAttempt[]>([]);
   const [loadingBoard, setLoadingBoard] = useState(true);
 
+  // pick a random question
   const nextQuestion = () => {
     const pick = generators[Math.floor(Math.random() * generators.length)];
-    const [x, y, correct, operator] = pick();
-    setA(x);
-    setB(y);
-    setAns(correct);
-    setOp(operator);
+    const [x,y,correct,operator] = pick();
+    setA(x); setB(y); setAns(correct); setOp(operator);
     setInput('');
   };
 
+  // start compete
   const handleStart = () => {
     setStarted(true);
-    setIndex(1);
+    setCorrectCount(0);
     setFinished(false);
     setStartTime(Date.now());
     nextQuestion();
   };
 
-  // **Fixed**: no unused `isCorrect`
+  // auto-advance when input length hits answer length
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
     setInput(val);
 
     if (val.length === ans.toString().length) {
-      if (index < TOTAL_QUESTIONS) {
-        setIndex(i => i + 1);
-        nextQuestion();
+      const num = parseInt(val, 10);
+      // only correct answers count toward the 10
+      if (num === ans) {
+        const newCount = correctCount + 1;
+        if (newCount < TOTAL_CORRECT) {
+          setCorrectCount(newCount);
+          nextQuestion();
+        } else {
+          // reached 10 correct → finish
+          setCorrectCount(newCount);
+          setTimeTaken(Math.floor((Date.now() - startTime) / 1000));
+          setFinished(true);
+        }
       } else {
-        setTimeTaken(Math.floor((Date.now() - startTime) / 1000));
-        setFinished(true);
+        // wrong answer → just move on
+        nextQuestion();
       }
     }
   };
 
+  // on finish: write + fetch
   useEffect(() => {
     if (!finished) return;
     (async () => {
-      const user = auth.currentUser;
-      if (!user) return;
+      const user = auth.currentUser; if (!user) return;
 
-      await addDoc(collection(db, 'attempts'), {
+      // write attempt with userName
+      await addDoc(collection(db,'attempts'), {
         userId:        user.uid,
+        userName:      user.displayName || 'User',
         challengeType: 'final',
         day:           dayNumber,
-        score:         TOTAL_QUESTIONS,
-        total:         TOTAL_QUESTIONS,
+        score:         TOTAL_CORRECT,
+        total:         TOTAL_CORRECT,
         timeTaken,
         createdAt:     serverTimestamp()
       });
 
+      // top-10 fastest
       const lbQ = query(
-        collection(db, 'attempts'),
-        where('challengeType', '==', 'final'),
-        where('day', '==', dayNumber),
-        orderBy('timeTaken', 'asc'),
+        collection(db,'attempts'),
+        where('challengeType','==','final'),
+        where('day','==',dayNumber),
+        orderBy('timeTaken','asc'),
         limit(10)
       );
       const lbSnap = await getDocs(lbQ);
-      setBoard(lbSnap.docs.map(d => ({ id: d.id, ...(d.data() as Omit<FinalAttempt, 'id'>) })));
+      setBoard(lbSnap.docs.map(d=>({
+        id: d.id,
+        ...(d.data() as Omit<FinalAttempt,'id'>)
+      })));
 
+      // your last 10 finals
       const myQ = query(
-        collection(db, 'attempts'),
-        where('challengeType', '==', 'final'),
-        where('day', '==', dayNumber),
-        where('userId', '==', user.uid),
-        orderBy('createdAt', 'desc'),
+        collection(db,'attempts'),
+        where('challengeType','==','final'),
+        where('day','==',dayNumber),
+        where('userId','==',user.uid),
+        orderBy('createdAt','desc'),
         limit(10)
       );
       const mySnap = await getDocs(myQ);
-      setRecent(mySnap.docs.map(d => ({ id: d.id, ...(d.data() as Omit<FinalAttempt, 'id'>) })));
+      setRecent(mySnap.docs.map(d=>({
+        id: d.id,
+        ...(d.data() as Omit<FinalAttempt,'id'>)
+      })));
 
       setLoadingBoard(false);
     })();
   }, [finished, timeTaken, dayNumber]);
 
+  // — UI —
+
   if (!started) {
     return (
       <div className="min-h-screen bg-background text-light flex flex-col items-center justify-center p-6">
         <h1 className="text-3xl font-heading mb-4">Day {dayNumber} Final Challenge</h1>
-        <p className="mb-6">10 random questions – fastest time wins!</p>
+        <p className="mb-6">Get {TOTAL_CORRECT} correct answers as fast as you can!</p>
         <button
           onClick={handleStart}
           className="bg-primary text-dark px-6 py-3 rounded-2xl text-lg hover:bg-primary/90 transition"
@@ -150,9 +172,9 @@ export default function CompetePage() {
   if (!finished) {
     return (
       <div className="min-h-screen bg-background text-light p-6 flex flex-col items-center">
-        <p className="mb-2">Question {index} / {TOTAL_QUESTIONS}</p>
+        <p className="mb-2">Correct: {correctCount} / {TOTAL_CORRECT}</p>
         <p className="mb-4 text-sm text-gray-400">
-          Time: {Math.floor((Date.now() - startTime) / 1000)}s
+          Time: {Math.floor((Date.now() - startTime)/1000)}s
         </p>
         <div className="bg-dark p-8 rounded-2xl shadow-card mb-4">
           <p className="text-4xl font-bold">{a} {op} {b} = ?</p>
@@ -185,9 +207,9 @@ export default function CompetePage() {
               </tr>
             </thead>
             <tbody>
-              {board.map((r, i) => (
-                <tr key={r.id} className={i % 2 ? 'bg-background' : 'bg-dark'}>
-                  <td className="p-2">{i + 1}</td><td className="p-2">{r.userId}</td><td className="p-2">{r.timeTaken}</td>
+              {board.map((r,i) => (
+                <tr key={r.id} className={i%2 ? 'bg-background' : 'bg-dark'}>
+                  <td className="p-2">{i+1}</td><td className="p-2">{r.userName}</td><td className="p-2">{r.timeTaken}</td>
                 </tr>
               ))}
             </tbody>
