@@ -98,7 +98,8 @@ export default function NavBar() {
       {/* only this div animates in */}
       <div style={{ ...containerStyle, ...contentStyle }}>
         {/* 1️⃣ User Name */}
-        <div style={{ fontSize: '1.5rem', fontFamily: 'Outfit, sans-serif' }}>
+        <div style={{ fontSize: '1.5rem', fontFamily: 'Outfit, sans-serif' }}
+        onClick={() => router.push('/dashboard')}>
           {userName}
         </div>
 

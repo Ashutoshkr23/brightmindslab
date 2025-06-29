@@ -11,7 +11,7 @@ const Dashboard = () => {
 
   // Your existing state
   const [userName, setUserName] = useState('User');
-  const [speedMathProgress, setSpeedMathProgress] = useState(1);
+  const [speedMathProgress, setSpeedMathProgress] = useState(10);
   const [rulesChallengeProgress, setRulesChallengeProgress] = useState(1);
   const [showDaySelector, setShowDaySelector] = useState(false);
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
