@@ -1,11 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
 const RulesChallengePage = () => {
-  const router = useRouter();
   const [rulesChallengeProgress, setRulesChallengeProgress] = useState(1);
 
   useEffect(() => {

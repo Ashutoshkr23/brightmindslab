@@ -1,11 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
 const MathChallengePage = () => {
-  const router = useRouter();
   const [speedMathProgress, setSpeedMathProgress] = useState(1);
 
   useEffect(() => {

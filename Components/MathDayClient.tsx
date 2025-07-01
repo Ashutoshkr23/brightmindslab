@@ -19,7 +19,7 @@ export default function MathDayClient({ day }: { day: string }) {
       alert('🚫 This day is not unlocked yet!');
       router.push('/dashboard');
     }
-  }, [dayNumber, router]);
+  }, [dayNumber, router, currentDay]);
 
   const taskButtons = Array.from({ length: 4 }).map((_, i) => {
     const taskNum = i + 1;
