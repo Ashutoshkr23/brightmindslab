@@ -1,95 +1,100 @@
-// app/profile/page.tsx
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter }          from 'next/navigation';
-import { auth, db }           from '@/lib/firebase';
-import { doc, getDoc, Timestamp } from 'firebase/firestore';
+import { auth, db } from '@/lib/firebase';
+import { doc, getDoc } from 'firebase/firestore';
+import { useRouter } from 'next/navigation';
+import type { User } from 'firebase/auth';
 
-interface Profile {
+// Define a type for your user data from Firestore
+interface UserProfile {
   name: string;
-  preparingFor: string;
-  englishFocus: string;
-  practiceTime?: string;
-  notifications: {
-    email: boolean;
-    push:  boolean;
-  };
-  interfaceLanguage: string;
-  joinedAt: Timestamp;
+  email: string;
+  goal?: string;
+  focus?: string;
+  whatsapp?: string;
 }
 
 export default function ProfilePage() {
   const router = useRouter();
-  const [loading, setLoading]     = useState(true);
-  const [profile, setProfile]     = useState<Profile | null>(null);
+  const [user, setUser] = useState<User | null>(null);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsub = auth.onAuthStateChanged(async (user) => {
-      if (!user) {
-        router.replace('/login');
-        return;
+    const unsubscribe = auth.onAuthStateChanged(async (currentUser) => {
+      if (currentUser) {
+        setUser(currentUser);
+        // Fetch user profile from Firestore
+        const userDocRef = doc(db, 'users', currentUser.uid);
+        const userDoc = await getDoc(userDocRef);
+        if (userDoc.exists()) {
+          setUserProfile(userDoc.data() as UserProfile);
+        }
+      } else {
+        // If no user, redirect to login/onboarding
+        router.push('/onboarding');
       }
-      const ref  = doc(db, 'users', user.uid);
-      const snap = await getDoc(ref);
-      if (!snap.exists()) {
-        router.replace('/onboarding');
-        return;
-      }
-      setProfile(snap.data() as Profile);
       setLoading(false);
     });
-    return () => unsub();
+
+    // Cleanup subscription on component unmount
+    return () => unsubscribe();
   }, [router]);
 
-  if (loading || !profile) {
+  // While loading, show a simple loading indicator
+  if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <p className="text-light">Loading profile…</p>
+      <div className="flex items-center justify-center min-h-screen bg-background">
+        <p className="text-light">Loading Profile...</p>
       </div>
     );
   }
 
-  const {
-    name,
-    preparingFor,
-    englishFocus,
-    practiceTime,
-    notifications,
-    interfaceLanguage,
-    joinedAt
-  } = profile;
+  // If loading is finished but there's no profile, show an error or redirect
+  if (!userProfile) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-background">
+        <p className="text-light">Could not load profile. Please try again.</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-background text-light p-6">
-      <div className="max-w-xl mx-auto bg-dark rounded-2xl shadow-card p-8 space-y-6">
-        <h1 className="text-3xl font-heading">My Profile</h1>
-
-        <div className="space-y-3">
-          <p><strong>Name:</strong> {name}</p>
-          <p><strong>Preparing For:</strong> {preparingFor}</p>
-          <p><strong>English Focus:</strong> {englishFocus}</p>
-          {practiceTime && <p><strong>Practice Time:</strong> {practiceTime}</p>}
-          <p>
-            <strong>Notifications:</strong>{' '}
-            {notifications.email && 'Email '}
-            {notifications.push  && 'Push'}
-            {!notifications.email && !notifications.push && 'None'}
-          </p>
-          <p><strong>Interface Language:</strong> {interfaceLanguage}</p>
-          <p>
-            <strong>Joined:</strong>{' '}
-            {joinedAt.toDate().toLocaleDateString()}
-          </p>
-        </div>
-
-        <div className="flex justify-end">
-          <button
-            onClick={() => auth.signOut()}
-            className="bg-danger hover:bg-danger/90 text-white px-4 py-2 rounded-xl transition"
-          >
-            Log Out
-          </button>
+    <div className="min-h-screen bg-background text-light p-4 md:p-8">
+      <div className="max-w-4xl mx-auto">
+        <h1 className="text-4xl font-bold font-heading text-primary mb-8">
+          Your Profile
+        </h1>
+        
+        <div className="bg-dark p-6 rounded-xl shadow-lg">
+          <div className="space-y-4">
+            <div className="flex flex-col">
+              <span className="text-sm text-gray-400">Name</span>
+              <p className="text-lg">{userProfile.name}</p>
+            </div>
+            <div className="border-t border-gray-700"></div>
+            <div className="flex flex-col">
+              <span className="text-sm text-gray-400">Email</span>
+              {/* This line is now safe because we wait for userProfile to load */}
+              <p className="text-lg">{userProfile.email}</p>
+            </div>
+            <div className="border-t border-gray-700"></div>
+            <div className="flex flex-col">
+              <span className="text-sm text-gray-400">Primary Goal</span>
+              <p className="text-lg">{userProfile.goal || 'Not set'}</p>
+            </div>
+            <div className="border-t border-gray-700"></div>
+            <div className="flex flex-col">
+              <span className="text-sm text-gray-400">Main Focus</span>
+              <p className="text-lg">{userProfile.focus || 'Not set'}</p>
+            </div>
+            <div className="border-t border-gray-700"></div>
+            <div className="flex flex-col">
+              <span className="text-sm text-gray-400">WhatsApp Number</span>
+              <p className="text-lg">{userProfile.whatsapp || 'Not provided'}</p>
+            </div>
+          </div>
         </div>
       </div>
     </div>

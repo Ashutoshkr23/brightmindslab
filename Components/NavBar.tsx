@@ -1,24 +1,17 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter }           from 'next/navigation';
-import Link                    from 'next/link';
-import { auth, provider, db }  from '@/lib/firebase';
-import { signInWithPopup }     from 'firebase/auth';
-import { doc, getDoc }         from 'firebase/firestore';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { auth, provider, db } from '@/lib/firebase';
+import { signInWithPopup } from 'firebase/auth';
+import { doc, getDoc } from 'firebase/firestore';
 
 export default function NavBar() {
   const router = useRouter();
 
-  // showNav flips after 2s
-  const [showNav, setShowNav] = useState(false);
-  useEffect(() => {
-    const timer = setTimeout(() => setShowNav(true), 2000);
-    return () => clearTimeout(timer);
-  }, []);
-
   // detect mobile/desktop
-  const [isMobile, setIsMobile] = useState(() => 
+  const [isMobile, setIsMobile] = useState(() =>
     typeof window !== 'undefined' && window.innerWidth < 768
   );
   useEffect(() => {
@@ -30,7 +23,9 @@ export default function NavBar() {
   // auth + menu state
   const [menuOpen, setMenuOpen] = useState(false);
   const [signedIn, setSignedIn] = useState(false);
-  const [userName, setUserName] = useState('User');
+  const [userName, setUserName] = useState('');
+  // FIX: Add loading state to prevent UI flicker
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const unsub = auth.onAuthStateChanged(async (user) => {
@@ -44,8 +39,10 @@ export default function NavBar() {
         }
       } else {
         setSignedIn(false);
-        setUserName('User');
+        setUserName(''); // Set to empty when logged out
       }
+      // FIX: Set loading to false after auth check is complete
+      setLoading(false);
     });
     return () => unsub();
   }, []);
@@ -61,46 +58,54 @@ export default function NavBar() {
     }
   };
 
-  // links (enrolled commented out)
+  // links
   const links = [
-    { href: '/profile', label: 'Profile',      auth: true  },
-    // { href: '/enrolled', label: 'Enrolled Courses', auth: true },
-    { href: '/contact', label: 'Contact Us',   auth: false },
-    { href: '/terms',   label: 'Terms & Conditions', auth: false },
-    { href: '/refund',  label: 'Refund Policy', auth: false },
+    { href: '/profile', label: 'Profile', auth: true },
+    { href: '/contact', label: 'Contact Us', auth: false },
+    { href: '/terms', label: 'Terms & Conditions', auth: false },
+    { href: '/refund', label: 'Refund Policy', auth: false },
   ];
 
-  // nav background always visible
   const navBackgroundStyle = {
     backgroundColor: '#111827',
-    color:           '#EAEAEA',
-    borderBottom:    '1px solid #3498DB',
-  };
-
-  // animated inner wrapper
-  const contentStyle = {
-    opacity:    showNav ? 1 : 0,
-    transform:  showNav ? 'translateY(0)' : 'translateY(-10px)',
-    transition: 'opacity 0.6s ease, transform 0.6s ease',
+    color: '#EAEAEA',
+    borderBottom: '1px solid #3498DB',
   };
 
   const containerStyle = {
-    maxWidth:      '1024px',
-    margin:        '0 auto',
-    display:       'flex',
-    alignItems:    'center',
-    justifyContent:'space-between',
-    padding:       '16px 24px',
+    maxWidth: '1024px',
+    margin: '0 auto',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: '16px 24px',
   };
+
+  // FIX: Skeleton component for loading state
+  const Skeleton = () => (
+    <div style={{
+      backgroundColor: '#374151', // gray-700
+      height: '24px',
+      width: '128px',
+      borderRadius: '8px',
+      animation: 'pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+    }}>
+      <style>{`
+        @keyframes pulse {
+          50% { opacity: .5; }
+        }
+      `}</style>
+    </div>
+  );
 
   return (
     <nav style={navBackgroundStyle}>
-      {/* only this div animates in */}
-      <div style={{ ...containerStyle, ...contentStyle }}>
+      <div style={containerStyle}>
         {/* 1️⃣ User Name */}
-        <div style={{ fontSize: '1.5rem', fontFamily: 'Outfit, sans-serif' }}
-        onClick={() => router.push('/dashboard')}>
-          {userName}
+        <div style={{ fontSize: '1.5rem', fontFamily: 'Outfit, sans-serif', cursor: 'pointer' }}
+          onClick={() => router.push(signedIn ? '/dashboard' : '/')}>
+          {/* FIX: Conditional rendering for loading state */}
+          {loading ? <Skeleton /> : (signedIn ? userName : 'Bright Minds Lab')}
         </div>
 
         {/* 2️⃣ Desktop Links */}
@@ -121,13 +126,13 @@ export default function NavBar() {
               <button
                 onClick={() => auth.signOut()}
                 style={{
-                  marginLeft:    '16px',
-                  padding:       '8px 16px',
+                  marginLeft: '16px',
+                  padding: '8px 16px',
                   backgroundColor: '#1F2937',
-                  color:         '#EAEAEA',
-                  border:        'none',
-                  borderRadius:  '12px',
-                  cursor:        'pointer',
+                  color: '#EAEAEA',
+                  border: 'none',
+                  borderRadius: '12px',
+                  cursor: 'pointer',
                 }}
               >
                 Log Out
@@ -136,13 +141,13 @@ export default function NavBar() {
               <button
                 onClick={handleSignIn}
                 style={{
-                  marginLeft:    '16px',
-                  padding:       '8px 16px',
+                  marginLeft: '16px',
+                  padding: '8px 16px',
                   backgroundColor: '#F39C12',
-                  color:         '#111827',
-                  border:        'none',
-                  borderRadius:  '12px',
-                  cursor:        'pointer',
+                  color: '#111827',
+                  border: 'none',
+                  borderRadius: '12px',
+                  cursor: 'pointer',
                 }}
               >
                 Log In
@@ -159,26 +164,12 @@ export default function NavBar() {
           >
             <svg
               style={{ color: '#EAEAEA' }}
-              width="24"
-              height="24"
-              stroke="currentColor"
-              fill="none"
-              viewBox="0 0 24 24"
+              width="24" height="24" stroke="currentColor" fill="none" viewBox="0 0 24 24"
             >
               {menuOpen ? (
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               ) : (
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4 8h16M4 16h16"
-                />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
               )}
             </svg>
           </div>
@@ -192,14 +183,10 @@ export default function NavBar() {
             {links.map(({ href, label, auth: req }) =>
               (!req || signedIn) && (
                 <Link
-                  key={href}
-                  href={href}
+                  key={href} href={href}
                   style={{
-                    display:        'block',
-                    padding:        '8px 12px',
-                    borderRadius:   '8px',
-                    color:          '#EAEAEA',
-                    textDecoration: 'none',
+                    display: 'block', padding: '8px 12px', borderRadius: '8px',
+                    color: '#EAEAEA', textDecoration: 'none',
                   }}
                   onClick={() => setMenuOpen(false)}
                 >
@@ -211,14 +198,8 @@ export default function NavBar() {
               <button
                 onClick={() => { setMenuOpen(false); auth.signOut(); }}
                 style={{
-                  width:           '100%',
-                  textAlign:       'left',
-                  padding:         '8px 12px',
-                  borderRadius:    '8px',
-                  backgroundColor: '#1F2937',
-                  color:           '#EAEAEA',
-                  border:          'none',
-                  cursor:          'pointer',
+                  width: '100%', textAlign: 'left', padding: '8px 12px', borderRadius: '8px',
+                  backgroundColor: '#1F2937', color: '#EAEAEA', border: 'none', cursor: 'pointer',
                 }}
               >
                 Log Out
@@ -227,14 +208,8 @@ export default function NavBar() {
               <button
                 onClick={() => { setMenuOpen(false); handleSignIn(); }}
                 style={{
-                  width:           '100%',
-                  textAlign:       'left',
-                  padding:         '8px 12px',
-                  borderRadius:    '12px',
-                  backgroundColor: '#F39C12',
-                  color:           '#111827',
-                  border:          'none',
-                  cursor:          'pointer',
+                  width: '100%', textAlign: 'left', padding: '8px 12px', borderRadius: '12px',
+                  backgroundColor: '#F39C12', color: '#111827', border: 'none', cursor: 'pointer',
                 }}
               >
                 Log In

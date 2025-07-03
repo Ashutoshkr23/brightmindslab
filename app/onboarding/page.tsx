@@ -2,16 +2,14 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useRouter } from 'next/navigation';
 import {
-  ArrowRight,
-  BookCheck,
-  Building,
-  CheckCircle,
-  School,
-  TrendingUp,
-  User,
-  MessageSquare,
+  ArrowRight, BookCheck, Building, CheckCircle, School, TrendingUp, User, MessageSquare,
 } from 'lucide-react';
+// -----------------  START: Import Firebase modules  -----------------
+import { auth, db } from '@/lib/firebase';
+import { doc, setDoc } from 'firebase/firestore';
+// ------------------  END: Import Firebase modules  ------------------
 
 // Define the structure for each step
 interface OnboardingStep {
@@ -23,7 +21,7 @@ interface OnboardingStep {
   options?: { name: string; icon: React.ElementType }[];
 }
 
-// Onboarding steps data tailored to the target audience
+// Onboarding steps data
 const onboardingSteps: OnboardingStep[] = [
   {
     key: 'name',
@@ -59,13 +57,14 @@ const onboardingSteps: OnboardingStep[] = [
   {
     key: 'whatsapp',
     title: 'Get important updates on WhatsApp',
-    description: 'We will send you reminders and practice materials.',
+    description: 'We will send you reminders and practice materials. (Optional)',
     icon: MessageSquare,
     inputType: 'tel',
   },
 ];
 
 export default function OnboardingPage() {
+  const router = useRouter();
   const [step, setStep] = useState(0);
   const [formData, setFormData] = useState({
     name: '',
@@ -74,6 +73,10 @@ export default function OnboardingPage() {
     whatsapp: '',
   });
   const [inputValue, setInputValue] = useState('');
+  // -----------------  START: Add loading state for submit button  -----------------
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  // ------------------  END: Add loading state for submit button  ------------------
+
 
   const handleNext = () => {
     if (currentStep.inputType) {
@@ -87,9 +90,37 @@ export default function OnboardingPage() {
     setFormData((prev) => ({ ...prev, [key]: value }));
     setStep((prev) => prev + 1);
   };
+  
+  // -----------------  START: Add function to save data  -----------------
+  const handleFinalSubmit = async () => {
+    setIsSubmitting(true);
+    const user = auth.currentUser;
+
+    if (user) {
+      try {
+        const userDocRef = doc(db, 'users', user.uid);
+        await setDoc(userDocRef, {
+          ...formData,
+          email: user.email, // Save email along with other details
+          uid: user.uid,
+        });
+        // Redirect to dashboard after successful save
+        router.push('/dashboard');
+      } catch (error) {
+        console.error("Error saving user data: ", error);
+        // Handle error state if needed
+        setIsSubmitting(false);
+      }
+    } else {
+        // Handle case where user is not logged in
+        console.error("No user is logged in to save data.");
+        setIsSubmitting(false);
+    }
+  };
+  // ------------------  END: Add function to save data  ------------------
+
 
   const currentStep = onboardingSteps[step];
-
   const variants = {
     hidden: { opacity: 0, y: 30 },
     enter: { opacity: 1, y: 0 },
@@ -119,7 +150,6 @@ export default function OnboardingPage() {
                 </h1>
                 <p className="mt-2 text-gray-400">{currentStep.description}</p>
               </div>
-
               {currentStep.inputType ? (
                 <div className="space-y-4">
                   <input
@@ -175,14 +205,18 @@ export default function OnboardingPage() {
               <p className="mt-2 text-gray-400">
                 We've personalized your learning journey.
               </p>
+              {/* -----------------  START: Update final button action  ----------------- */}
               <motion.button
-                onClick={() => (window.location.href = '/dashboard')}
+                onClick={handleFinalSubmit}
+                disabled={isSubmitting}
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.98 }}
-                className="mt-8 w-full bg-primary text-dark font-bold py-3 px-4 rounded-xl flex items-center justify-center"
+                className="mt-8 w-full bg-primary text-dark font-bold py-3 px-4 rounded-xl flex items-center justify-center disabled:opacity-50"
               >
-                Start Learning <ArrowRight className="ml-2" />
+                {isSubmitting ? 'Saving...' : 'Start Learning'}
+                {!isSubmitting && <ArrowRight className="ml-2" />}
               </motion.button>
+              {/* ------------------  END: Update final button action  ------------------ */}
             </motion.div>
           )}
         </AnimatePresence>
