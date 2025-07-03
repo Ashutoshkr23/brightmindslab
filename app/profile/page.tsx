@@ -1,235 +1,129 @@
 'use client';
 
-import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useRouter } from 'next/navigation';
-import {
-  ArrowRight, BookCheck, Building, CheckCircle, School, TrendingUp, User, MessageSquare,
-} from 'lucide-react';
+import { useState, useEffect } from 'react';
 import { auth, db } from '@/lib/firebase';
-import { doc, setDoc } from 'firebase/firestore';
+import { doc, getDoc } from 'firebase/firestore';
+import { useRouter } from 'next/navigation';
+import { User, Mail, Star, CheckCircle, XCircle, Goal, BookOpen, Phone } from 'lucide-react';
+import type { User as FirebaseUser } from 'firebase/auth';
 
-// Define the structure for each step
-interface OnboardingStep {
-  key: string;
-  title: string;
-  description: string;
-  icon: React.ElementType;
-  inputType?: 'text' | 'tel';
-  options?: { name: string; icon: React.ElementType }[];
+// Define a type for the user's profile data from Firestore
+interface UserProfile {
+  name: string;
+  email: string;
+  goal?: string;
+  focus?: string;
+  whatsapp?: string;
+  tier?: string;
+  isSubscribed?: boolean;
+  subscriptionStatus?: string;
 }
 
-// Onboarding steps data
-const onboardingSteps: OnboardingStep[] = [
-  {
-    key: 'name',
-    title: "What's your name?",
-    description: "Let's get to know each other.",
-    icon: User,
-    inputType: 'text',
-  },
-  {
-    key: 'goal',
-    title: 'What are you preparing for?',
-    description: 'Select your primary goal to help us tailor your content.',
-    icon: TrendingUp,
-    options: [
-      { name: 'SSC', icon: Building },
-      { name: 'Banking', icon: Building },
-      { name: 'Other Govt. Exams', icon: Building },
-      { name: 'School', icon: School },
-    ],
-  },
-  {
-    key: 'focus',
-    title: "What's your main focus?",
-    description: 'This helps us recommend the right exercises for you.',
-    icon: BookCheck,
-    options: [
-      { name: 'Vocabulary', icon: BookCheck },
-      { name: 'Basic Grammar', icon: BookCheck },
-      { name: 'Sentence Formation', icon: BookCheck },
-      { name: 'Quick Calculation', icon: BookCheck },
-    ],
-  },
-  {
-    key: 'whatsapp',
-    title: 'Get important updates on WhatsApp',
-    description: 'We will send you reminders and practice materials. (Optional)',
-    icon: MessageSquare,
-    inputType: 'tel',
-  },
-];
+// A simple skeleton loader for a single line of text
+const SkeletonLoader = () => (
+    <div className="h-6 bg-gray-700 rounded-md w-3/4 animate-pulse"></div>
+);
 
-export default function OnboardingPage() {
+export default function ProfilePage() {
   const router = useRouter();
-  const [step, setStep] = useState(0);
-  const [formData, setFormData] = useState({
-    name: '',
-    goal: '',
-    focus: '',
-    whatsapp: '',
-  });
-  const [inputValue, setInputValue] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [loading, setLoading] = useState(true);
 
-
-  const handleNext = () => {
-    if (currentStep.inputType) {
-      setFormData((prev) => ({ ...prev, [currentStep.key]: inputValue }));
-    }
-    setInputValue('');
-    setStep((prev) => prev + 1);
-  };
-
-  const handleSelectOption = (key: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [key]: value }));
-    setStep((prev) => prev + 1);
-  };
-  
-  const handleFinalSubmit = async () => {
-    setIsSubmitting(true);
-    const user = auth.currentUser;
-
-    if (user) {
-      try {
-        const userDocRef = doc(db, 'users', user.uid);
-        
-        // --- START: Added default subscription fields ---
-        await setDoc(userDocRef, {
-          ...formData,
-          email: user.email,
-          uid: user.uid,
-          tier: "free",
-          subscriptionStatus: "inactive",
-          isSubscribed: false,
-        });
-        // --- END: Added default subscription fields ---
-
-        router.push('/dashboard');
-      } catch (error) {
-        console.error("Error saving user data: ", error);
-        setIsSubmitting(false);
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged(async (currentUser) => {
+      if (currentUser) {
+        // User is logged in, fetch their profile from Firestore
+        const userDocRef = doc(db, 'users', currentUser.uid);
+        try {
+          const userDoc = await getDoc(userDocRef);
+          if (userDoc.exists()) {
+            setUserProfile(userDoc.data() as UserProfile);
+          } else {
+            // If no profile exists for a logged-in user, they need to onboard
+            router.push('/onboarding');
+          }
+        } catch (error) {
+            console.error("Error fetching user profile:", error);
+            // Optionally handle fetch error state
+        }
+      } else {
+        // No user is logged in, redirect them to a login page
+        router.push('/');
       }
-    } else {
-        console.error("No user is logged in to save data.");
-        setIsSubmitting(false);
-    }
+      setLoading(false);
+    });
+
+    // Cleanup subscription on component unmount
+    return () => unsubscribe();
+  }, [router]);
+
+  // Display a full-page loading indicator while checking auth and fetching data
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-background">
+        <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  // A helper component to render each profile item
+  type ProfileItemProps = {
+    icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
+    label: string;
+    value?: string;
+    isLoading: boolean;
   };
 
-
-  const currentStep = onboardingSteps[step];
-  const variants = {
-    hidden: { opacity: 0, y: 30 },
-    enter: { opacity: 1, y: 0 },
-    exit: { opacity: 0, y: -30 },
-  };
+  const ProfileItem = ({ icon: Icon, label, value, isLoading }: ProfileItemProps) => (
+    <div className="flex items-center space-x-4">
+      <Icon className="h-6 w-6 text-secondary flex-shrink-0" />
+      <div className="flex-grow">
+        <p className="text-sm text-gray-400">{label}</p>
+        {isLoading ? <SkeletonLoader /> : <p className="text-lg font-semibold">{value || 'Not set'}</p>}
+      </div>
+    </div>
+  );
 
   return (
-    <div className="min-h-screen bg-background text-light font-sans flex flex-col items-center justify-center p-4">
-      <div className="w-full max-w-md mx-auto">
-        <AnimatePresence mode="wait">
-          {step < onboardingSteps.length ? (
-            // Form Steps
-            <motion.div
-              key={step}
-              variants={variants}
-              initial="hidden"
-              animate="enter"
-              exit="exit"
-              transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-            >
-              <div className="text-center mb-8">
-                <div className="flex items-center justify-center mb-4">
-                  <currentStep.icon className="h-10 w-10 text-primary" />
-                </div>
-                <h1 className="text-3xl font-bold font-heading text-light">
-                  {currentStep.title}
+    <div className="min-h-screen bg-background text-light p-4 sm:p-6 md:p-8">
+      <div className="max-w-2xl mx-auto">
+        <div className="flex items-center space-x-4 mb-8">
+            <User className="h-12 w-12 text-primary" />
+            <div>
+                <h1 className="text-3xl md:text-4xl font-bold font-heading">
+                    {loading ? 'Loading...' : userProfile?.name}
                 </h1>
-                <p className="mt-2 text-gray-400">{currentStep.description}</p>
-              </div>
-              {currentStep.inputType ? (
-                <div className="space-y-4">
-                  <input
-                    type={currentStep.inputType}
-                    placeholder={`Enter your ${currentStep.key}`}
-                    value={inputValue}
-                    onChange={(e) => setInputValue(e.target.value)}
-                    className="w-full p-4 bg-dark border border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary"
-                  />
-                  <motion.button
-                    onClick={handleNext}
-                    whileHover={{ scale: 1.03 }}
-                    whileTap={{ scale: 0.98 }}
-                    className="w-full bg-primary text-dark font-bold py-3 px-4 rounded-xl flex items-center justify-center"
-                  >
-                    Continue <ArrowRight className="ml-2" />
-                  </motion.button>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {currentStep.options?.map((option) => (
-                    <motion.button
-                      key={option.name}
-                      onClick={() =>
-                        handleSelectOption(currentStep.key, option.name)
-                      }
-                      whileHover={{ scale: 1.03 }}
-                      whileTap={{ scale: 0.98 }}
-                      className="w-full flex items-center text-left p-4 bg-dark border border-gray-700 rounded-xl hover:border-primary transition-colors"
-                    >
-                      <option.icon className="h-6 w-6 text-secondary mr-4" />
-                      <span className="font-semibold">{option.name}</span>
-                    </motion.button>
-                  ))}
-                </div>
-              )}
-            </motion.div>
-          ) : (
-            // Completion Step
-            <motion.div
-              key="success"
-              variants={variants}
-              initial="hidden"
-              animate="enter"
-              exit="exit"
-              transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-              className="text-center"
-            >
-              <CheckCircle className="h-16 w-16 text-success mx-auto mb-4" />
-              <h1 className="text-3xl font-bold font-heading text-light">
-                You're all set!
-              </h1>
-              <p className="mt-2 text-gray-400">
-                We've personalized your learning journey.
-              </p>
-              <motion.button
-                onClick={handleFinalSubmit}
-                disabled={isSubmitting}
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.98 }}
-                className="mt-8 w-full bg-primary text-dark font-bold py-3 px-4 rounded-xl flex items-center justify-center disabled:opacity-50"
-              >
-                {isSubmitting ? 'Saving...' : 'Start Learning'}
-                {!isSubmitting && <ArrowRight className="ml-2" />}
-              </motion.button>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Progress Bar */}
-        <div className="mt-12">
-          <div className="w-full bg-dark rounded-full h-2">
-            <motion.div
-              className="bg-primary h-2 rounded-full"
-              initial={{ width: '0%' }}
-              animate={{
-                width: `${(step / onboardingSteps.length) * 100}%`,
-              }}
-              transition={{ duration: 0.5, ease: 'easeInOut' }}
-            />
-          </div>
+                <p className="text-gray-400">Here is your profile information.</p>
+            </div>
         </div>
+        
+        <div className="bg-dark p-6 rounded-2xl shadow-lg space-y-6">
+            <ProfileItem icon={Mail} label="Email" value={userProfile?.email} isLoading={loading} />
+            <div className="border-t border-gray-700"></div>
+            <ProfileItem icon={Goal} label="Primary Goal" value={userProfile?.goal} isLoading={loading} />
+            <div className="border-t border-gray-700"></div>
+            <ProfileItem icon={BookOpen} label="Main Focus" value={userProfile?.focus} isLoading={loading} />
+            <div className="border-t border-gray-700"></div>
+            <ProfileItem icon={Phone} label="WhatsApp" value={userProfile?.whatsapp || 'Not provided'} isLoading={loading} />
+        </div>
+
+        <div className="mt-8 bg-dark p-6 rounded-2xl shadow-lg">
+            <h2 className="text-2xl font-bold font-heading mb-4 text-primary">Subscription</h2>
+            <div className="space-y-6">
+                <ProfileItem icon={Star} label="Current Tier" value={userProfile?.tier} isLoading={loading} />
+                <div className="border-t border-gray-700"></div>
+                <div className="flex items-center space-x-4">
+                    <div className="flex-shrink-0">
+                        {loading ? <SkeletonLoader /> : userProfile?.isSubscribed ? <CheckCircle className="h-6 w-6 text-success" /> : <XCircle className="h-6 w-6 text-red-500" />}
+                    </div>
+                    <div className="flex-grow">
+                        <p className="text-sm text-gray-400">Subscription Status</p>
+                        <p className="text-lg font-semibold">{loading ? '' : userProfile?.subscriptionStatus}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
       </div>
     </div>
   );
