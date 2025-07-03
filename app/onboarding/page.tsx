@@ -1,15 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import {
   ArrowRight, BookCheck, Building, CheckCircle, School, TrendingUp, User, MessageSquare,
 } from 'lucide-react';
-// -----------------  START: Import Firebase modules  -----------------
 import { auth, db } from '@/lib/firebase';
 import { doc, setDoc } from 'firebase/firestore';
-// ------------------  END: Import Firebase modules  ------------------
 
 // Define the structure for each step
 interface OnboardingStep {
@@ -73,10 +71,29 @@ export default function OnboardingPage() {
     whatsapp: '',
   });
   const [inputValue, setInputValue] = useState('');
-  // -----------------  START: Add loading state for submit button  -----------------
   const [isSubmitting, setIsSubmitting] = useState(false);
-  // ------------------  END: Add loading state for submit button  ------------------
+  
+  // --- FIX START: Add state to manage auth status and errors ---
+  const [authReady, setAuthReady] = useState(false);
+  const [error, setError] = useState('');
+  // --- FIX END ---
 
+  // --- FIX START: This hook ensures the page waits for Firebase to be ready ---
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged(user => {
+      if (user) {
+        // Now we are sure a user is logged in.
+        setAuthReady(true);
+      } else {
+        // If no user is found after checking, they should not be on this page.
+        // Redirecting to home is a safe fallback.
+        router.push('/');
+      }
+    });
+    // Clean up the listener when the component is removed from the screen
+    return () => unsubscribe();
+  }, [router]);
+  // --- FIX END ---
 
   const handleNext = () => {
     if (currentStep.inputType) {
@@ -91,33 +108,41 @@ export default function OnboardingPage() {
     setStep((prev) => prev + 1);
   };
   
-  // -----------------  START: Add function to save data  -----------------
   const handleFinalSubmit = async () => {
+    // --- FIX START: Added more robust error checking ---
+    setError(''); // Clear previous errors
     setIsSubmitting(true);
     const user = auth.currentUser;
 
+    // This check is now more reliable because we wait for authReady
     if (user) {
       try {
         const userDocRef = doc(db, 'users', user.uid);
+        // Using { merge: true } is a safe practice. It creates the doc if it doesn't exist,
+        // or updates it without overwriting existing fields.
         await setDoc(userDocRef, {
           ...formData,
-          email: user.email, // Save email along with other details
+          email: user.email,
           uid: user.uid,
-        });
-        // Redirect to dashboard after successful save
+          // Includes the default subscription fields as requested
+          tier: "free",
+          subscriptionStatus: "inactive",
+          isSubscribed: false,
+        }, { merge: true });
+        
         router.push('/dashboard');
-      } catch (error) {
-        console.error("Error saving user data: ", error);
-        // Handle error state if needed
+
+      } catch (err) {
+        console.error("Firestore Write Error: ", err);
+        setError("Could not save profile. Please check your connection and try again.");
         setIsSubmitting(false);
       }
     } else {
-        // Handle case where user is not logged in
-        console.error("No user is logged in to save data.");
-        setIsSubmitting(false);
+      setError("Authentication error. Please refresh and try again.");
+      setIsSubmitting(false);
     }
+    // --- FIX END ---
   };
-  // ------------------  END: Add function to save data  ------------------
 
 
   const currentStep = onboardingSteps[step];
@@ -126,6 +151,16 @@ export default function OnboardingPage() {
     enter: { opacity: 1, y: 0 },
     exit: { opacity: 0, y: -30 },
   };
+
+  // --- FIX START: Show a loading state until Firebase auth is confirmed ---
+  if (!authReady) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-background">
+        <p className="text-light text-lg">Loading...</p>
+      </div>
+    );
+  }
+  // --- FIX END ---
 
   return (
     <div className="min-h-screen bg-background text-light font-sans flex flex-col items-center justify-center p-4">
@@ -205,7 +240,6 @@ export default function OnboardingPage() {
               <p className="mt-2 text-gray-400">
                 We've personalized your learning journey.
               </p>
-              {/* -----------------  START: Update final button action  ----------------- */}
               <motion.button
                 onClick={handleFinalSubmit}
                 disabled={isSubmitting}
@@ -216,7 +250,12 @@ export default function OnboardingPage() {
                 {isSubmitting ? 'Saving...' : 'Start Learning'}
                 {!isSubmitting && <ArrowRight className="ml-2" />}
               </motion.button>
-              {/* ------------------  END: Update final button action  ------------------ */}
+              
+              {/* --- FIX START: Show error message to user if submission fails --- */}
+              {error && (
+                <p className="mt-4 text-sm text-red-500">{error}</p>
+              )}
+              {/* --- FIX END --- */}
             </motion.div>
           )}
         </AnimatePresence>
