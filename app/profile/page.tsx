@@ -5,7 +5,7 @@ import { auth, db } from '@/lib/firebase';
 import { doc, getDoc } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 import { User, Mail, Star, CheckCircle, XCircle, Goal, BookOpen, Phone } from 'lucide-react';
-import type { User as FirebaseUser } from 'firebase/auth';
+//import type { User as FirebaseUser } from 'firebase/auth';
 
 // Define a type for the user's profile data from Firestore
 interface UserProfile {

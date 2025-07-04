@@ -235,10 +235,10 @@ export default function OnboardingPage() {
             >
               <CheckCircle className="h-16 w-16 text-success mx-auto mb-4" />
               <h1 className="text-3xl font-bold font-heading text-light">
-                You're all set!
+                You&apos;re all set!
               </h1>
               <p className="mt-2 text-gray-400">
-                We've personalized your learning journey.
+                We&apos;ve personalized your learning journey.
               </p>
               <motion.button
                 onClick={handleFinalSubmit}
