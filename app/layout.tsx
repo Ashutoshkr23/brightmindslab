@@ -19,8 +19,8 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "Bright Minds Lab",
-  description: "A Next.js PWA App",
+  title: "30 Days Mastery",
+  description: "The ultimate 30-day challenge to master speed math and calculation.",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
