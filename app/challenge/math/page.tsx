@@ -1,46 +1,113 @@
-'use client';
+// app/challenge/math/page.tsx
 
-import { useState, useEffect } from 'react';
-import Link from 'next/link';
+"use client";
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import { ChevronDown, ChevronRight, Lock, Star } from 'lucide-react';
 
-const MathChallengePage = () => {
-  const [speedMathProgress, setSpeedMathProgress] = useState(1);
+export default function Page() {
+    const totalDays = 30;
+    const days = Array.from({ length: totalDays }, (_, i) => i + 1);
 
-  useEffect(() => {
-    const math = localStorage.getItem('speedMathProgress');
-    if (math) {
-      setSpeedMathProgress(parseInt(math, 10));
-    }
-  }, []);
+    // This should be replaced with your actual Firestore data fetching logic
+    const [userProgress, setUserProgress] = useState<{ [key: string]: { stars: number } }>({});
+    
+    useEffect(() => {
+        // Example data - replace with your data fetching call
+        const fetchedProgress = {
+            'day-1': { stars: 3 },
+            'day-2': { stars: 2 },
+            'day-3': { stars: 3 },
+            'day-4': { stars: 1 },
+        };
+        setUserProgress(fetchedProgress);
+    }, []);
 
-  return (
-    <div className="min-h-screen bg-background text-light p-6">
-      <header className="text-center mb-10">
-        <h1 className="text-4xl font-bold text-primary">30 Day Speed Math Challenge</h1>
-        <p className="text-lg text-gray-300">Select a day to begin your challenge.</p>
-      </header>
-      <main className="max-w-4xl mx-auto">
-        <div className="grid grid-cols-3 md:grid-cols-5 lg:grid-cols-6 gap-4">
-          {Array.from({ length: 30 }, (_, i) => i + 1).map((day) => {
-            const isUnlocked = day <= speedMathProgress;
-            return (
-              <Link key={day} href={isUnlocked ? `/challenge/math/day/${day}` : '#'} passHref>
-                <div
-                  className={`flex items-center justify-center h-20 rounded-xl text-xl font-bold transition-all ${
-                    isUnlocked
-                      ? 'bg-secondary text-white cursor-pointer hover:bg-secondary/80'
-                      : 'bg-dark text-gray-500 cursor-not-allowed'
-                  }`}
-                >
-                  {isUnlocked ? `Day ${day}` : <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>}
-                </div>
-              </Link>
-            );
-          })}
+    const [isExpanded, setIsExpanded] = useState(false);
+
+    const lastCompletedDay = Object.keys(userProgress).length;
+    const nextTaskDay = lastCompletedDay + 1;
+
+    // --- Star Rating Component ---
+    const StarRating = ({ count }: { count: number }) => (
+        <div className="flex items-center">
+            {Array.from({ length: 3 }).map((_, i) => (
+                <Star
+                    key={i}
+                    size={16}
+                    className={i < count ? 'text-amber-400 fill-amber-400' : 'text-foreground/30'}
+                />
+            ))}
         </div>
-      </main>
-    </div>
-  );
-};
+    );
 
-export default MathChallengePage;
+    return (
+        <main className="flex min-h-screen flex-col items-center p-4 sm:p-8 bg-background">
+            <div className="w-full max-w-md">
+                <h1 className="text-3xl font-bold text-center text-foreground mb-6">
+                    30-Day Speed Math Mastery
+                </h1>
+
+                {/* --- Completed Tasks Dropdown --- */}
+                {lastCompletedDay > 0 && (
+                     <div className="mb-4">
+                        <button
+                            onClick={() => setIsExpanded(!isExpanded)}
+                            className="w-full flex justify-between items-center p-4 bg-dark rounded-lg text-foreground border border-primary shadow-md transition-colors"
+                        >
+                            <span className="font-semibold">Completed Tasks</span>
+                            {isExpanded ? <ChevronDown size={20} /> : <ChevronRight size={20} />}
+                        </button>
+                        {isExpanded && (
+                            <div className="mt-2 space-y-2 animate-fadeIn">
+                                {days.slice(0, lastCompletedDay).map(day => (
+                                    <div key={day} className="flex justify-between items-center bg-dark p-3 rounded-lg text-foreground/80 border border-primary/50">
+                                        <span className="font-medium">Day {day}</span>
+                                        <StarRating count={userProgress[`day-${day}`]?.stars || 0} />
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                )}
+               
+                {/* --- Next Task Card --- */}
+                {nextTaskDay <= totalDays && (
+                    <div className="mb-4">
+                         <h2 className="text-sm font-semibold text-foreground/60 uppercase mb-2 ml-1">Next Task</h2>
+                        <Link href={`/challenge/math/day/${nextTaskDay}`}>
+                            <div className="w-full flex justify-between items-center p-4 bg-dark hover:bg-opacity-90 rounded-lg text-foreground font-bold text-lg border-2 border-primary shadow-lg cursor-pointer transition-all transform hover:scale-105">
+                                Day {nextTaskDay}
+                                <ChevronRight size={24} />
+                            </div>
+                        </Link>
+                    </div>
+                )}
+
+                {/* --- Upcoming Locked Tasks --- */}
+                {nextTaskDay < totalDays && (
+                    <div>
+                        <h2 className="text-sm font-semibold text-foreground/60 uppercase mb-2 ml-1">Upcoming</h2>
+                        <div className="space-y-2">
+                        {days.slice(nextTaskDay).map((day) => (
+                            <div
+                                key={day}
+                                className="w-full flex justify-between items-center p-4 bg-dark/50 rounded-lg text-foreground/50 border border-primary/30"
+                            >
+                                <span className="font-medium">Day {day}</span>
+                                <Lock size={16} />
+                            </div>
+                        ))}
+                        </div>
+                    </div>
+                )}
+                 {nextTaskDay > totalDays && (
+                    <div className="text-center p-8 bg-dark rounded-lg border border-primary shadow-lg">
+                        <h2 className="text-2xl font-bold text-green-400">Congratulations!</h2>
+                        <p className="text-foreground/80 mt-2">You have completed the 30-Day Challenge!</p>
+                    </div>
+                 )}
+            </div>
+        </main>
+    );
+}
