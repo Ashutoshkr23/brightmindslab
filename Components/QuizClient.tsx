@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
-import { getGeneratorsForDay, QuestionGenerator } from '@/lib/dayGenerators';
+import { challengeConfig, StarRating } from '@/lib/dayGenerators'
 import { auth, db } from '@/lib/firebase';
 import {
   collection,
@@ -18,96 +18,96 @@ import {
   Timestamp,
 } from 'firebase/firestore';
 
-// Define the structure for an attempt
+// The interface remains, ensuring type safety for your Firestore documents.
 interface Attempt {
   id: string;
   challengeType: 'math' | 'rules' | 'task' | 'final';
   day: number;
   taskNo?: number;
   score: number;
-  total?: number;
-  timeTaken: number; // seconds
+  total?: number; // Total questions attempted
+  timeTaken: number;
   createdAt: Timestamp;
+  starsEarned?: number;
+  proTag?: string | null;
 }
+
+// Helper function to calculate star ratings.
+const getStarRating = (time: number, ratingConfig: StarRating) => {
+    if (time <= ratingConfig.pro.maxTime) return { stars: 3, tag: ratingConfig.pro.label };
+    if (time <= ratingConfig.threeStar.maxTime) return { stars: 3, tag: null };
+    if (time <= ratingConfig.twoStar.maxTime) return { stars: 2, tag: null };
+    return { stars: 1, tag: null };
+};
+
+// --- CHANGE 2: The goal is now based on correct answers. ---
+const CORRECT_ANSWERS_GOAL = 10;
 
 export default function QuizClient() {
   const { day, task } = useParams();
   const dayNumber = parseInt(day as string || '1', 10);
   const taskNumber = parseInt(task as string || '1', 10);
 
-  // --- NEW: State for Admin Mode ---
+  // All your original state variables are preserved.
   const [isAdmin, setIsAdmin] = useState(false);
-  const [questionsPerApproach, setQuestionsPerApproach] = useState(20); // Default to 20
-
-  // Question state
-  const [generators, setGenerators] = useState<QuestionGenerator[]>([]);
   const [started, setStarted] = useState(false);
-  const [questionNumber, setQuestionNumber] = useState(0);
-  const [score, setScore] = useState(0);
+  
+  // `score` tracks correct answers, `questionCount` tracks total attempts.
+  const [score, setScore] = useState(0); 
+  const [questionCount, setQuestionCount] = useState(0); 
+
   const [number1, setNumber1] = useState<number | null>(null);
   const [number2, setNumber2] = useState<number | null>(null);
   const [operator, setOperator] = useState<string | null>(null);
   const [correctAnswer, setCorrectAnswer] = useState<number | null>(null);
   const [tempAnswer, setTempAnswer] = useState<number | null>(null);
-
-  // Timing & result
+  
   const [showResult, setShowResult] = useState(false);
   const [startTime, setStartTime] = useState<number | null>(null);
   const [elapsedTime, setElapsedTime] = useState(0);
-
-  // Recent attempts
+  
   const [recentAttempts, setRecentAttempts] = useState<Attempt[]>([]);
   const [loadingAttempts, setLoadingAttempts] = useState(true);
+  
+  // Your config-loading logic is unchanged.
+  const challengeDayConfig = challengeConfig[dayNumber];
+  const currentTask = challengeDayConfig?.tasks[taskNumber - 1];
+  const currentGenerator = currentTask?.generator;
+  const totalTasksInDay = challengeDayConfig?.tasks.length || 0;
 
-  // --- NEW: Effect to check for admin status ---
+  // Your effects for checking admin and timing are unchanged.
   useEffect(() => {
     const checkAdminStatus = async () => {
       const user = auth.currentUser;
       if (user) {
         const userRef = doc(db, 'users', user.uid);
         const userSnap = await getDoc(userRef);
-        if (userSnap.exists() && userSnap.data().isAdmin) {
-          setIsAdmin(true);
-          setQuestionsPerApproach(10); // Set questions to 10 for admins
-        } else {
-          setQuestionsPerApproach(20); // Ensure it's 20 for regular users
-        }
+        if (userSnap.exists() && userSnap.data().isAdmin) setIsAdmin(true);
       }
     };
     checkAdminStatus();
   }, []);
 
-
-  // Load generators for the day
-  useEffect(() => {
-    setGenerators(getGeneratorsForDay(dayNumber));
-  }, [dayNumber]);
-
-  const currentGenerator = generators[taskNumber - 1];
-
-  // Generate a new question
   const generateQuestion = () => {
     if (!currentGenerator) return;
-    const [a, b, ans, op] = currentGenerator();
-    setNumber1(a);
-    setNumber2(b);
-    setCorrectAnswer(ans);
-    setOperator(op);
+    const { operands, answer, operator } = currentGenerator();
+    setNumber1(operands[0]);
+    setNumber2(operands[1]);
+    setCorrectAnswer(answer);
+    setOperator(operator);
     setTempAnswer(null);
   };
 
-  // Start the quiz
   const startApproach = () => {
     setStarted(true);
     setScore(0);
-    setQuestionNumber(1);
+    setQuestionCount(1); // Start with the first question.
     setShowResult(false);
     generateQuestion();
     setStartTime(Date.now());
     setElapsedTime(0);
   };
 
-  // Timer logic
   useEffect(() => {
     let timer: NodeJS.Timeout;
     if (started && startTime) {
@@ -118,7 +118,6 @@ export default function QuizClient() {
     return () => clearInterval(timer);
   }, [started, startTime]);
 
-  // Handle user input
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = parseInt(e.target.value);
     setTempAnswer(isNaN(val) ? null : val);
@@ -127,40 +126,46 @@ export default function QuizClient() {
     }
   };
 
-  // Check the answer
+  // --- CHANGE 2 (Implementation): Answer logic now targets 10 correct answers. ---
   const handleAnswer = (userAnswer: number) => {
     if (correctAnswer === null) return;
-    if (userAnswer === correctAnswer) setScore(s => s + 1);
-
-    // Use the state variable for the question limit
-    if (questionNumber < questionsPerApproach) {
-      setQuestionNumber(n => n + 1);
-      generateQuestion();
-    } else {
+    
+    let newScore = score;
+    if (userAnswer === correctAnswer) {
+        newScore = score + 1;
+        setScore(newScore); // Update score immediately if correct.
+    }
+    
+    if (newScore >= CORRECT_ANSWERS_GOAL) {
       setShowResult(true);
       setStarted(false);
+    } else {
+      setQuestionCount(n => n + 1); // Increment total attempts.
+      generateQuestion();
     }
   };
 
-  // Log attempt and fetch recent attempts when the quiz finishes
+  // Your logging logic is preserved, with `questionCount` now used for `total`.
   useEffect(() => {
     if (!showResult) return;
     const logAndFetch = async () => {
       const user = auth.currentUser;
-      if (user) {
-        // Log this attempt to Firestore
+      if (user && challengeDayConfig) {
+        const { stars, tag } = getStarRating(elapsedTime, challengeDayConfig.starRating);
+
         await addDoc(collection(db, 'attempts'), {
           userId: user.uid,
           challengeType: 'task',
           day: dayNumber,
           taskNo: taskNumber,
           score,
-          total: questionsPerApproach, // Log the correct total
+          total: questionCount, // Log total questions attempted.
           timeTaken: elapsedTime,
           createdAt: serverTimestamp(),
+          starsEarned: stars,
+          proTag: tag,
         });
 
-        // Query the last 10 attempts for this task
         const q = query(
           collection(db, 'attempts'),
           where('userId', '==', user.uid),
@@ -180,51 +185,55 @@ export default function QuizClient() {
       setLoadingAttempts(false);
     };
     logAndFetch();
-  }, [showResult, dayNumber, taskNumber, score, elapsedTime, questionsPerApproach]);
+  }, [showResult, dayNumber, taskNumber, score, elapsedTime, questionCount, challengeDayConfig]);
 
   const handleRetry = () => startApproach();
   const formatTime = (s: number) => {
-    const m = Math.floor(s / 60), sec = s % 60;
+    const m = Math.floor(s / 60);
+    const sec = s % 60;
     return `${m}m ${sec}s`;
   };
 
-  // — RESULT SCREEN —
   if (showResult) {
-    const isLast = taskNumber === generators.length;
+    const isLast = taskNumber === totalTasksInDay;
+    const { stars, tag } = getStarRating(elapsedTime, challengeDayConfig.starRating);
     return (
       <div className="flex flex-col items-center bg-background text-light min-h-screen p-6 gap-4">
         <h1 className="text-3xl font-bold text-primary mt-20">
-          ✅ Task {taskNumber} Completed
+          ✅ {currentTask?.name || `Task ${taskNumber}`} Completed
         </h1>
-        <p className="text-2xl">Score: {score} / {questionsPerApproach}</p> {/* Use dynamic total */}
-        <p className="text-lg text-gray-400">Time: {formatTime(elapsedTime)}</p>
-        
-        {/* Navigation buttons */}
-        <div className="flex flex-col md:flex-row gap-4 mt-8">
-          <button onClick={handleRetry} className="bg-primary text-dark px-6 py-2 rounded-xl hover:bg-opacity-90">
-            🔁 Retry
-          </button>
-          <button onClick={() => window.location.href=`/challenge/math/day/${dayNumber}`} className="bg-secondary text-white px-6 py-2 rounded-xl hover:bg-opacity-90">
-            📋 Back
-          </button>
-          {!isLast && (
-            <button onClick={() => window.location.href=`/challenge/math/day/${dayNumber}/task/${taskNumber+1}`} className="bg-success text-dark px-6 py-2 rounded-xl hover:bg-opacity-90">
-              ⏭️ Next
-            </button>
-          )}
+
+        {/* --- CHANGE 1: Display Pro tag OR stars, not both. --- */}
+        <div className="text-4xl h-12 flex items-center">
+            {tag ? (
+                <span className="text-3xl px-4 py-2 bg-yellow-400 text-dark rounded-full font-semibold">{tag}</span>
+            ) : (
+                <span className="text-yellow-400">{'★'.repeat(stars)}{'☆'.repeat(3 - stars)}</span>
+            )}
         </div>
         
-        {/* Recent attempts section */}
+        <p className="text-2xl">Score: {score} / {questionCount}</p>
+        <p className="text-lg text-gray-400">Time: {formatTime(elapsedTime)}</p>
+        
+        {/* Your navigation buttons are unchanged. */}
+        <div className="flex flex-col md:flex-row gap-4 mt-8">
+          <button onClick={handleRetry} className="bg-primary text-dark px-6 py-2 rounded-xl hover:bg-opacity-90">🔁 Retry</button>
+          <button onClick={() => window.location.href=`/challenge/math/day/${dayNumber}`} className="bg-secondary text-white px-6 py-2 rounded-xl hover:bg-opacity-90">📋 Back</button>
+          {!isLast && (<button onClick={() => window.location.href=`/challenge/math/day/${dayNumber}/task/${taskNumber+1}`} className="bg-success text-dark px-6 py-2 rounded-xl hover:bg-opacity-90">⏭️ Next</button>)}
+        </div>
+        
         <section className="w-full max-w-lg mt-12">
           <h2 className="text-2xl font-heading mb-4">Your Last 10 Attempts</h2>
-          {loadingAttempts ? <p>Loading attempts…</p> :
-            recentAttempts.length === 0 ? <p>No attempts yet.</p> :
+          {loadingAttempts ? <p>Loading…</p> : recentAttempts.length === 0 ? <p>No attempts yet.</p> :
             <div className="space-y-3">
-              {recentAttempts.map(a=>(
+              {recentAttempts.map(a => (
                 <div key={a.id} className="bg-dark p-4 rounded-2xl shadow-card">
-                  <p className="text-sm text-secondary">{a.createdAt.toDate().toLocaleString()}</p>
+                  <div className="flex justify-between items-center">
+                    <p className="text-sm text-secondary">{a.createdAt.toDate().toLocaleString()}</p>
+                    {a.proTag ? <span className="text-xs px-2 py-1 bg-yellow-400 text-dark rounded-full font-semibold">{a.proTag}</span> : a.starsEarned ? <p className="text-yellow-400">{'★'.repeat(a.starsEarned)}{'☆'.repeat(3 - (a.starsEarned || 0))}</p> : null}
+                  </div>
                   <h3 className="text-lg font-heading">Task {a.taskNo} of Day {a.day}</h3>
-                  <p>Score: <strong>{a.score}</strong> | Time: <strong>{a.timeTaken}s</strong></p>
+                  <p>Score: <strong>{a.score} / {a.total}</strong> | Time: <strong>{a.timeTaken}s</strong></p>
                 </div>
               ))}
             </div>
@@ -234,38 +243,36 @@ export default function QuizClient() {
     );
   }
 
-  // — START SCREEN —
   if (!started) {
     return (
-      <div className="flex flex-col items-center justify-center bg-background text-light min-h-screen p-6">
-        <h2 className="text-3xl mb-2">Day {dayNumber} - Task {taskNumber}</h2>
-        {isAdmin && <p className="text-yellow-400 mb-6">(Admin Mode: 10 Questions)</p>} {/* Admin indicator */}
-        <button onClick={startApproach} className="bg-primary text-dark text-2xl px-6 py-2 rounded-xl">
+      <div className="flex flex-col items-center justify-center bg-background text-light min-h-screen p-6 text-center">
+        {/* --- CHANGE 3: The main day heading is removed from this screen. --- */}
+        <h2 className="text-3xl font-bold mb-4">{currentTask?.name || `Task ${taskNumber}`}</h2>
+        <p className="text-lg text-gray-400 mb-6">Answer {CORRECT_ANSWERS_GOAL} questions correctly to complete the task.</p>
+        <button onClick={startApproach} className="bg-primary text-dark text-2xl px-8 py-3 rounded-xl mt-4">
           🚀 Start Task
         </button>
       </div>
     );
   }
 
-  // — QUESTION SCREEN —
   return (
     <div className="flex flex-col items-center bg-background text-light h-screen p-6">
-      <h2 className="text-2xl mb-2">Day {dayNumber} — Task {taskNumber}</h2>
-      <p className="text-lg mb-1">Question {questionNumber} / {questionsPerApproach}</p> {/* Use dynamic total */}
+      <h2 className="text-2xl mb-2">{currentTask?.name || `Task ${taskNumber}`}</h2>
+      {/* --- CHANGE 2: Progress bar now shows correct answers toward the goal. --- */}
+      <p className="text-lg mb-1">Correct Answers: {score} / {CORRECT_ANSWERS_GOAL}</p>
       <p className="text-sm text-gray-400 mb-4">Time: {formatTime(elapsedTime)}</p>
 
-      <div className="bg-dark border border-gray-700 rounded-xl shadow-lg w-full p-6 flex flex-col items-center">
-        <p className="text-4xl mb-4 font-bold">{number1} {operator} {number2} = ?</p>
+      <div className="bg-dark border border-gray-700 rounded-xl shadow-lg w-full max-w-md p-6 flex flex-col items-center">
+        <p className="text-5xl mb-4 font-bold tracking-wider">{number1} {operator} {number2} = ?</p>
         <input
           type="number"
           value={tempAnswer ?? ''}
           onChange={handleChange}
           autoFocus
-          className="w-full text-center text-3xl border border-gray-300 rounded-lg p-2"
+          className="w-full text-center text-4xl bg-gray-200 text-dark border border-gray-300 rounded-lg p-2"
         />
       </div>
     </div>
   );
 }
-
-

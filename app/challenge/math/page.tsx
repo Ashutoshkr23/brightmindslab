@@ -15,10 +15,7 @@ export default function Page() {
     useEffect(() => {
         // Example data - replace with your data fetching call
         const fetchedProgress = {
-            'day-1': { stars: 3 },
-            'day-2': { stars: 2 },
-            'day-3': { stars: 3 },
-            'day-4': { stars: 1 },
+            
         };
         setUserProgress(fetchedProgress);
     }, []);
