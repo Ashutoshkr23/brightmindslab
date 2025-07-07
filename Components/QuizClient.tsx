@@ -2,8 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
-// Correction: Importing from the correct config file we created.
-import { challengeConfig, StarRating } from '@/lib/dayGenerators'; 
+import { challengeConfig, StarRating } from '@/lib/dayGenerators';
 import { auth, db } from '@/lib/firebase';
 import {
   collection,
@@ -19,7 +18,7 @@ import {
   Timestamp,
 } from 'firebase/firestore';
 
-// The interface remains, ensuring type safety for your Firestore documents.
+// The interface remains the same.
 interface Attempt {
   id: string;
   challengeType: 'math' | 'rules' | 'task' | 'final';
@@ -33,7 +32,7 @@ interface Attempt {
   proTag?: string | null;
 }
 
-// Helper function to calculate star ratings.
+// Helper function remains the same.
 const getStarRating = (time: number, ratingConfig: StarRating) => {
     if (time <= ratingConfig.pro.maxTime) return { stars: 3, tag: ratingConfig.pro.label };
     if (time <= ratingConfig.threeStar.maxTime) return { stars: 3, tag: null };
@@ -62,24 +61,48 @@ export default function QuizClient() {
   const [startTime, setStartTime] = useState<number | null>(null);
   const [elapsedTime, setElapsedTime] = useState(0);
   const [recentAttempts, setRecentAttempts] = useState<Attempt[]>([]);
+  
+  // --- FIX: Added the missing state variable ---
   const [loadingAttempts, setLoadingAttempts] = useState(true);
+
+  // --- State for tier checks ---
+  const [isLoading, setIsLoading] = useState(true);
+  const [isProUser, setIsProUser] = useState(false);
+  const [currentAttemptCount, setCurrentAttemptCount] = useState(0);
   
   const challengeDayConfig = challengeConfig[dayNumber];
   const currentTask = challengeDayConfig?.tasks[taskNumber - 1];
   const currentGenerator = currentTask?.generator;
   const totalTasksInDay = challengeDayConfig?.tasks.length || 0;
 
+  // This useEffect now correctly fetches user status and sets loading states.
   useEffect(() => {
-    const checkAdminStatus = async () => {
+    const fetchUserStatus = async () => {
       const user = auth.currentUser;
-      if (user) {
-        const userRef = doc(db, 'users', user.uid);
-        const userSnap = await getDoc(userRef);
-        if (userSnap.exists() && userSnap.data().isAdmin) setIsAdmin(true);
+      if (!user) {
+        setIsLoading(false);
+        return;
       }
+
+      const userRef = doc(db, 'users', user.uid);
+      const userSnap = await getDoc(userRef);
+      if (userSnap.exists()) {
+        const userData = userSnap.data();
+        if (userData.isPro) setIsProUser(true);
+        if (userData.isAdmin) setIsAdmin(true);
+      }
+
+      const attemptsRef = collection(db, 'users', user.uid, 'attempts');
+      const q = query(attemptsRef, where('day', '==', dayNumber), where('taskNo', '==', taskNumber));
+      const attemptsSnap = await getDocs(q);
+      setCurrentAttemptCount(attemptsSnap.size);
+
+      setIsLoading(false);
     };
-    checkAdminStatus();
-  }, []);
+
+    fetchUserStatus();
+  }, [dayNumber, taskNumber]);
+
 
   const generateQuestion = () => {
     if (!currentGenerator) return;
@@ -92,6 +115,11 @@ export default function QuizClient() {
   };
 
   const startApproach = () => {
+    if (!isProUser && currentAttemptCount >= 5) {
+      alert("You have reached your 5-attempt limit for this task. Upgrade to Pro for unlimited attempts!");
+      return;
+    }
+
     setStarted(true);
     setScore(0);
     setQuestionCount(1);
@@ -137,20 +165,18 @@ export default function QuizClient() {
     }
   };
 
-  // --- THIS IS THE ONLY SECTION WITH CHANGES ---
+  // --- FIX: Restored the logging and fetching logic ---
   useEffect(() => {
     if (!showResult) return;
     const logAndFetch = async () => {
       const user = auth.currentUser;
       if (user && challengeDayConfig) {
+        setLoadingAttempts(true); // Start loading before fetching
         const { stars, tag } = getStarRating(elapsedTime, challengeDayConfig.starRating);
 
-        // 1. Define the path to the user's specific "attempts" subcollection.
         const userAttemptsCollectionRef = collection(db, 'users', user.uid, 'attempts');
-
-        // 2. Add the new attempt document to that subcollection.
+        
         await addDoc(userAttemptsCollectionRef, {
-          userId: user.uid,
           challengeType: 'task',
           day: dayNumber,
           taskNo: taskNumber,
@@ -162,11 +188,8 @@ export default function QuizClient() {
           proTag: tag,
         });
 
-        // 3. Query the same subcollection to fetch recent attempts.
         const q = query(
-          userAttemptsCollectionRef, // Use the new path here as well
-          where('userId', '==', user.uid),
-          where('challengeType', '==', 'task'),
+          userAttemptsCollectionRef,
           where('day', '==', dayNumber),
           where('taskNo', '==', taskNumber),
           orderBy('createdAt', 'desc'),
@@ -179,7 +202,7 @@ export default function QuizClient() {
         }));
         setRecentAttempts(data);
       }
-      setLoadingAttempts(false);
+      setLoadingAttempts(false); // Stop loading after fetching
     };
     logAndFetch();
   }, [showResult, dayNumber, taskNumber, score, elapsedTime, questionCount, challengeDayConfig]);
@@ -191,6 +214,15 @@ export default function QuizClient() {
     return `${m}m ${sec}s`;
   };
 
+  if (isLoading) {
+    return (
+        <div className="flex items-center justify-center h-screen">
+            <p className="text-xl">Checking your access...</p>
+        </div>
+    );
+  }
+  
+  // The rest of your JSX is unchanged.
   if (showResult) {
     const isLast = taskNumber === totalTasksInDay;
     const { stars, tag } = getStarRating(elapsedTime, challengeDayConfig.starRating);
@@ -200,7 +232,6 @@ export default function QuizClient() {
           ✅ {currentTask?.name || `Task ${taskNumber}`} Completed
         </h1>
 
-        {/* --- CHANGE 1: Display Pro tag OR stars, not both. --- */}
         <div className="text-4xl h-12 flex items-center">
             {tag ? (
                 <span className="text-3xl px-4 py-2 bg-yellow-400 text-dark rounded-full font-semibold">{tag}</span>
@@ -212,7 +243,6 @@ export default function QuizClient() {
         <p className="text-2xl">Score: {score} / {questionCount}</p>
         <p className="text-lg text-gray-400">Time: {formatTime(elapsedTime)}</p>
         
-        {/* Your navigation buttons are unchanged. */}
         <div className="flex flex-col md:flex-row gap-4 mt-8">
           <button onClick={handleRetry} className="bg-primary text-dark px-6 py-2 rounded-xl hover:bg-opacity-90">🔁 Retry</button>
           <button onClick={() => window.location.href=`/challenge/math/day/${dayNumber}`} className="bg-secondary text-white px-6 py-2 rounded-xl hover:bg-opacity-90">📋 Back</button>
@@ -243,9 +273,9 @@ export default function QuizClient() {
   if (!started) {
     return (
       <div className="flex flex-col items-center justify-center bg-background text-light min-h-screen p-6 text-center">
-        {/* --- CHANGE 3: The main day heading is removed from this screen. --- */}
         <h2 className="text-3xl font-bold mb-4">{currentTask?.name || `Task ${taskNumber}`}</h2>
         <p className="text-lg text-gray-400 mb-6">Answer {CORRECT_ANSWERS_GOAL} questions correctly to complete the task.</p>
+        {!isProUser && <p className="text-sm text-yellow-400 mb-4">Attempts remaining: {5 - currentAttemptCount}</p>}
         <button onClick={startApproach} className="bg-primary text-dark text-2xl px-8 py-3 rounded-xl mt-4">
           🚀 Start Task
         </button>
@@ -256,7 +286,6 @@ export default function QuizClient() {
   return (
     <div className="flex flex-col items-center bg-background text-light h-screen p-6">
       <h2 className="text-2xl mb-2">{currentTask?.name || `Task ${taskNumber}`}</h2>
-      {/* --- CHANGE 2: Progress bar now shows correct answers toward the goal. --- */}
       <p className="text-lg mb-1">Correct Answers: {score} / {CORRECT_ANSWERS_GOAL}</p>
       <p className="text-sm text-gray-400 mb-4">Time: {formatTime(elapsedTime)}</p>
 
@@ -273,4 +302,3 @@ export default function QuizClient() {
     </div>
   );
 }
-
