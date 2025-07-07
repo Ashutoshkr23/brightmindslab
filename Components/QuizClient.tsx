@@ -2,7 +2,8 @@
 
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
-import { challengeConfig, StarRating } from '@/lib/dayGenerators'
+// Correction: Importing from the correct config file we created.
+import { challengeConfig, StarRating } from '@/lib/dayGenerators'; 
 import { auth, db } from '@/lib/firebase';
 import {
   collection,
@@ -40,7 +41,6 @@ const getStarRating = (time: number, ratingConfig: StarRating) => {
     return { stars: 1, tag: null };
 };
 
-// --- CHANGE 2: The goal is now based on correct answers. ---
 const CORRECT_ANSWERS_GOAL = 10;
 
 export default function QuizClient() {
@@ -51,31 +51,24 @@ export default function QuizClient() {
   // All your original state variables are preserved.
   const [isAdmin, setIsAdmin] = useState(false);
   const [started, setStarted] = useState(false);
-  
-  // `score` tracks correct answers, `questionCount` tracks total attempts.
   const [score, setScore] = useState(0); 
   const [questionCount, setQuestionCount] = useState(0); 
-
   const [number1, setNumber1] = useState<number | null>(null);
   const [number2, setNumber2] = useState<number | null>(null);
   const [operator, setOperator] = useState<string | null>(null);
   const [correctAnswer, setCorrectAnswer] = useState<number | null>(null);
   const [tempAnswer, setTempAnswer] = useState<number | null>(null);
-  
   const [showResult, setShowResult] = useState(false);
   const [startTime, setStartTime] = useState<number | null>(null);
   const [elapsedTime, setElapsedTime] = useState(0);
-  
   const [recentAttempts, setRecentAttempts] = useState<Attempt[]>([]);
   const [loadingAttempts, setLoadingAttempts] = useState(true);
   
-  // Your config-loading logic is unchanged.
   const challengeDayConfig = challengeConfig[dayNumber];
   const currentTask = challengeDayConfig?.tasks[taskNumber - 1];
   const currentGenerator = currentTask?.generator;
   const totalTasksInDay = challengeDayConfig?.tasks.length || 0;
 
-  // Your effects for checking admin and timing are unchanged.
   useEffect(() => {
     const checkAdminStatus = async () => {
       const user = auth.currentUser;
@@ -101,7 +94,7 @@ export default function QuizClient() {
   const startApproach = () => {
     setStarted(true);
     setScore(0);
-    setQuestionCount(1); // Start with the first question.
+    setQuestionCount(1);
     setShowResult(false);
     generateQuestion();
     setStartTime(Date.now());
@@ -126,26 +119,25 @@ export default function QuizClient() {
     }
   };
 
-  // --- CHANGE 2 (Implementation): Answer logic now targets 10 correct answers. ---
   const handleAnswer = (userAnswer: number) => {
     if (correctAnswer === null) return;
     
     let newScore = score;
     if (userAnswer === correctAnswer) {
         newScore = score + 1;
-        setScore(newScore); // Update score immediately if correct.
+        setScore(newScore);
     }
     
     if (newScore >= CORRECT_ANSWERS_GOAL) {
       setShowResult(true);
       setStarted(false);
     } else {
-      setQuestionCount(n => n + 1); // Increment total attempts.
+      setQuestionCount(n => n + 1);
       generateQuestion();
     }
   };
 
-  // Your logging logic is preserved, with `questionCount` now used for `total`.
+  // --- THIS IS THE ONLY SECTION WITH CHANGES ---
   useEffect(() => {
     if (!showResult) return;
     const logAndFetch = async () => {
@@ -153,21 +145,26 @@ export default function QuizClient() {
       if (user && challengeDayConfig) {
         const { stars, tag } = getStarRating(elapsedTime, challengeDayConfig.starRating);
 
-        await addDoc(collection(db, 'attempts'), {
+        // 1. Define the path to the user's specific "attempts" subcollection.
+        const userAttemptsCollectionRef = collection(db, 'users', user.uid, 'attempts');
+
+        // 2. Add the new attempt document to that subcollection.
+        await addDoc(userAttemptsCollectionRef, {
           userId: user.uid,
           challengeType: 'task',
           day: dayNumber,
           taskNo: taskNumber,
           score,
-          total: questionCount, // Log total questions attempted.
+          total: questionCount,
           timeTaken: elapsedTime,
           createdAt: serverTimestamp(),
           starsEarned: stars,
           proTag: tag,
         });
 
+        // 3. Query the same subcollection to fetch recent attempts.
         const q = query(
-          collection(db, 'attempts'),
+          userAttemptsCollectionRef, // Use the new path here as well
           where('userId', '==', user.uid),
           where('challengeType', '==', 'task'),
           where('day', '==', dayNumber),
@@ -276,3 +273,4 @@ export default function QuizClient() {
     </div>
   );
 }
+
