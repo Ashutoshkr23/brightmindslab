@@ -171,6 +171,7 @@ export default function QuizClient() {
     const logAndFetch = async () => {
       const user = auth.currentUser;
       if (user && challengeDayConfig) {
+         console.log(isAdmin)
         setLoadingAttempts(true); // Start loading before fetching
         const { stars, tag } = getStarRating(elapsedTime, challengeDayConfig.starRating);
 

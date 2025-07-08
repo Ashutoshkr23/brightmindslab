@@ -24,7 +24,7 @@ export default function MathChallengePage({
           Challenge Not Found
         </h1>
         <p className="text-lg text-gray-300">
-          Sorry, we couldn't find a challenge for Day {dayNumber}.
+          Sorry, we couldn&apos;t find a challenge for Day {dayNumber}.
         </p>
         <Link href="/learn">
           <button className="mt-8 bg-secondary text-white px-6 py-2 rounded-lg hover:opacity-90">

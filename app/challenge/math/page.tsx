@@ -5,7 +5,22 @@ import { ChevronDown, ChevronRight, Lock, Star, Crown } from 'lucide-react';
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth, db } from "@/lib/firebase";
 import { collection, doc, getDoc, getDocs } from "firebase/firestore";
-import { challengeConfig } from "@/lib/dayGenerators";
+// Corrected the import path to match our setup
+import { challengeConfig } from "@/lib/dayGenerators"; 
+
+// --- FIX: StarRating component moved outside the Page component ---
+// This ensures it's only defined once and follows the Rules of Hooks.
+const StarRating = ({ count }: { count: number }) => (
+    <div className="flex items-center">
+        {Array.from({ length: 3 }).map((_, i) => (
+            <Star
+                key={i}
+                size={16}
+                className={i < count ? 'text-amber-400 fill-amber-400' : 'text-foreground/30'}
+            />
+        ))}
+    </div>
+);
 
 // Define the shape of our progress data
 interface DayProgress {
@@ -14,10 +29,10 @@ interface DayProgress {
 }
 
 export default function Page() {
-    const totalDays = 30; // Kept from your original code
+    const totalDays = 30;
     const days = Array.from({ length: totalDays }, (_, i) => i + 1);
     
-    // State for user, their progress, and tier status
+    // All hooks are now correctly at the top level of the component.
     const [user] = useAuthState(auth);
     const [userProgress, setUserProgress] = useState<Map<number, DayProgress>>(new Map());
     const [isPro, setIsPro] = useState(false);
@@ -31,20 +46,17 @@ export default function Page() {
                 return;
             }
 
-            // 1. Fetch user's tier status
             const userRef = doc(db, 'users', user.uid);
             const userSnap = await getDoc(userRef);
             if (userSnap.exists() && userSnap.data().isPro) {
                 setIsPro(true);
             }
 
-            // 2. Fetch all of the user's practice attempts
             const attemptsRef = collection(db, 'users', user.uid, 'attempts');
             const attemptsSnap = await getDocs(attemptsRef);
 
             const progress = new Map<number, DayProgress>();
 
-            // 3. Process attempts to determine progress for each day
             attemptsSnap.forEach(doc => {
                 const attempt = doc.data();
                 const day = attempt.day;
@@ -68,26 +80,18 @@ export default function Page() {
         fetchUserProgress();
     }, [user]);
 
-    // --- New Unlocking Logic ---
+    // This logic is fine and does not involve hooks.
     let lastCompletedDay = 0;
     for (let day = 1; day <= totalDays; day++) {
         const progress = userProgress.get(day);
         if (progress && progress.completedTasks.size >= progress.totalTasks) {
             lastCompletedDay = day;
         } else {
-            break; // Stop at the first day that isn't fully completed
+            break; 
         }
     }
     const nextTaskDay = lastCompletedDay + 1;
     
-    const StarRating = ({ count }: { count: number }) => (
-        <div className="flex items-center">
-            {Array.from({ length: 3 }).map((_, i) => (
-                <Star key={i} size={16} className={i < count ? 'text-amber-400 fill-amber-400' : 'text-foreground/30'} />
-            ))}
-        </div>
-    );
-
     if (isLoading) {
         return <div className="text-center p-10">Loading Your Progress...</div>
     }
@@ -112,11 +116,12 @@ export default function Page() {
                         {isExpanded && (
                             <div className="mt-2 space-y-2 animate-fadeIn">
                                 {days.slice(0, lastCompletedDay).map(day => (
-                                    <div key={day} className="flex justify-between items-center bg-dark p-3 rounded-lg text-foreground/80 border border-primary/50">
-                                        <span className="font-medium">Day {day}</span>
-                                        {/* This can be enhanced to show average stars */}
-                                        <StarRating count={3} />
-                                    </div>
+                                    <Link href={`/challenge/math/day/${day}`} key={day}>
+                                      <div className="flex justify-between items-center bg-dark p-3 rounded-lg text-foreground/80 border border-primary/50 cursor-pointer hover:border-primary">
+                                          <span className="font-medium">Day {day}</span>
+                                          <StarRating count={3} />
+                                      </div>
+                                    </Link>
                                 ))}
                             </div>
                         )}
@@ -127,7 +132,6 @@ export default function Page() {
                 {nextTaskDay <= totalDays && (
                     <div className="mb-4">
                         <h2 className="text-sm font-semibold text-foreground/60 uppercase mb-2 ml-1">Next Task</h2>
-                        {/* Tier check for next task */}
                         {nextTaskDay > 7 && !isPro ? (
                             <div className="w-full flex flex-col items-center p-4 bg-dark rounded-lg text-foreground border-2 border-amber-400 shadow-lg">
                                 <Crown size={24} className="text-amber-400 mb-2"/>
