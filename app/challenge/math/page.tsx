@@ -109,13 +109,13 @@ export default function Page() {
   return (
     <main className="flex min-h-screen flex-col items-center p-4 sm:p-8 bg-background">
       <div className="w-full max-w-md">
-        <h1 className="text-3xl font-bold text-center text-foreground mb-6">
+        <h1 className="text-3xl font-bold text-center text-foreground mb-6 text-light">
           30-Day Speed Math Mastery
         </h1>
 
         {/* Completed Tasks */}
         {lastCompletedDay > 0 && (
-          <div className="mb-4">
+          <div className="mb-4 text-light">
             <button
               onClick={() => setIsExpanded(!isExpanded)}
               className="w-full flex justify-between items-center p-4 bg-dark rounded-lg text-foreground border border-primary shadow-md"
@@ -142,7 +142,7 @@ export default function Page() {
 
         {/* Next Task */}
         {nextTaskDay <= totalDays && (
-          <div className="mb-4">
+          <div className="mb-4 text-light">
             <h2 className="text-sm font-semibold text-foreground/60 uppercase mb-2 ml-1">
               Next Task
             </h2>
@@ -172,7 +172,7 @@ export default function Page() {
 
         {/* Upcoming Locked Tasks */}
         {nextTaskDay < totalDays && (
-          <div>
+          <div className="text-light">
             <h2 className="text-sm font-semibold text-foreground/60 uppercase mb-2 ml-1">
               Upcoming
             </h2>
