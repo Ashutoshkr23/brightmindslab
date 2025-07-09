@@ -1,4 +1,4 @@
-// lib/challengeConfig.ts
+
 
 // Define the structure for our data
 export type Question = {
