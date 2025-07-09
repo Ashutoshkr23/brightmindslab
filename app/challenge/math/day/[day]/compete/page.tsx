@@ -3,8 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 // Update this import to match the actual exports from '@/lib/dayGenerators'
-import { QuestionGenerator } from '@/lib/dayGenerators';
-// import getGeneratorsForDay from '@/lib/dayGenerators'; // Uncomment and adjust if default export exists
+import { challengeConfig, QuestionGenerator } from '@/lib/dayGenerators';
 import { auth, db } from '@/lib/firebase';
 import {
   collection,
@@ -36,11 +35,14 @@ export default function CompetePage() {
   const router = useRouter();
   const { day } = useParams();
   const dayNumber = parseInt(day as string || '1', 10);
-  console.log(dayNumber);
 
   const [generators, setGenerators] = useState<QuestionGenerator[]>([]);
   useEffect(() => {
-    setGenerators(getGeneratorsForDay(dayNumber));
+    if (challengeConfig[dayNumber]) {
+      const dayTasks = challengeConfig[dayNumber].tasks;
+      const dayGenerators = dayTasks.map(task => task.generator);
+      setGenerators(dayGenerators);
+    }
   }, [dayNumber]);
 
   const [started, setStarted] = useState(false);
@@ -226,9 +228,5 @@ export default function CompetePage() {
       </button>
     </div>
   );
-}
-function getGeneratorsForDay(dayNumber: number): React.SetStateAction<QuestionGenerator[]> {
-  console.log(dayNumber);
-  throw new Error('Function not implemented.');
 }
 
