@@ -159,13 +159,26 @@ const abcCbaSubtract: QuestionGenerator = () => {
 };
 
 const xyYxSubtract: QuestionGenerator = () => {
+  // pick x from 1 to 9
   const x = Math.floor(Math.random() * 9) + 1;
-  let y = Math.floor(Math.random() * 10);
-  while (y === x) y = Math.floor(Math.random() * 10);
+  // pick y from 1 to 9, but not equal to x
+  let y = Math.floor(Math.random() * 9) + 1;
+  while (y === x) {
+    y = Math.floor(Math.random() * 9) + 1;
+  }
   const a = x * 10 + y;
   const b = y * 10 + x;
-  return { operands: [a, b], operator: "-", answer: a - b };
+  // ensure the larger comes first
+  const first = Math.max(a, b);
+  const second = Math.min(a, b);
+  return {
+    operands: [first, second],
+    operator: "-",
+    answer: first - second
+  };
 };
+
+
 
 // --- Challenge Definitions ---
 export const challengeConfig: Record<number, ChallengeDay> = {
