@@ -178,6 +178,40 @@ const xyYxSubtract: QuestionGenerator = () => {
   };
 };
 
+// table generators
+const createTableGenerator = (minTable: number, maxTable: number): QuestionGenerator => {
+  return () => {
+    const base = Math.floor(Math.random() * (maxTable - minTable + 1)) + minTable;
+    const multiplier = Math.floor(Math.random() * 10) + 1; // 1–10
+    return { operands: [base, multiplier], operator: "*", answer: base * multiplier };
+  };
+};
+
+const table1to4 = createTableGenerator(1, 4);
+const table5to6 = createTableGenerator(5, 6);
+const table7to8 = createTableGenerator(7, 8);
+const table9to10 = createTableGenerator(9, 10);
+const table11to12 = createTableGenerator(11, 12);
+const table13to14 = createTableGenerator(13, 14);
+const table15to16 = createTableGenerator(15, 16);
+const table17to18 = createTableGenerator(17, 18);
+const table19to20 = createTableGenerator(19, 20);
+const table21to22 = createTableGenerator(21, 22);
+const table23to24 = createTableGenerator(23, 24);
+const table25to26 = createTableGenerator(25, 26);
+
+// star rating for tables
+const tableStarRating: StarRating = {
+  pro: { maxTime: 20, label: "Pro" },
+  threeStar: { maxTime: 25 },
+  twoStar: { maxTime: 30 },
+  oneStar: { minTime: 30 },
+};
+
+
+
+
+
 
 
 // --- Challenge Definitions ---
@@ -251,6 +285,42 @@ export const challengeConfig: Record<number, ChallengeDay> = {
       { name: "3-Digit - 3-Digit With Borrow", generator: threeDigitSubtractWithBorrow },
       { name: "ABC - CBA (Base Method)", generator: abcCbaSubtract },
       { name: "XY - YX", generator: xyYxSubtract },
+    ],
+  },
+  6: {
+    heading: "Tables Day 6",
+    starRating: tableStarRating,
+    tasks: [
+      { name: "Table 1–4", generator: table1to4 },
+      { name: "Table 5–6", generator: table5to6 },
+      { name: "Table 7–8", generator: table7to8 },
+    ],
+  },
+  7: {
+    heading: "Tables Day 7",
+    starRating: tableStarRating,
+    tasks: [
+      { name: "Table 9–10", generator: table9to10 },
+      { name: "Table 11–12", generator: table11to12 },
+      { name: "Table 13–14", generator: table13to14 },
+    ],
+  },
+  8: {
+    heading: "Tables Day 8",
+    starRating: tableStarRating,
+    tasks: [
+      { name: "Table 15–16", generator: table15to16 },
+      { name: "Table 17–18", generator: table17to18 },
+      { name: "Table 19–20", generator: table19to20 },
+    ],
+  },
+  10: {
+    heading: "Tables Day 10",
+    starRating: tableStarRating,
+    tasks: [
+      { name: "Table 21–22", generator: table21to22 },
+      { name: "Table 23–24", generator: table23to24 },
+      { name: "Table 25–26", generator: table25to26 },
     ],
   },
 };
