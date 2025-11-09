@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+// Assuming '@/lib/firebase' contains the necessary auth, db, and provider exports
 import { auth, db, provider } from '@/lib/firebase';
 import { doc, getDoc } from 'firebase/firestore';
 import { signInWithPopup } from 'firebase/auth';
@@ -76,30 +77,24 @@ const Dashboard = () => {
 
       <main className="flex-grow p-6 space-y-8 pt-16">
         <h1 className="text-center text-4xl font-bold font-heading text-light">
-          Choose Your Challenge
+          {/* Updated Title for Clarity */}
+          Start Your Mental Math Challenge
         </h1>
-        <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
+        {/* Adjusted grid to center the single column or maintain 1-column layout */}
+        <div className="max-w-xl mx-auto grid grid-cols-1 gap-8">
           <Link href="/challenge/math">
-            <div className="h-full bg-dark rounded-2xl p-8 shadow-card border border-light/10 hover:border-primary/80 hover:scale-105 transition-all duration-300 cursor-pointer">
-              <h2 className="text-2xl font-bold font-heading text-white mb-2">
-                30 Day Speed Math Challenge
+            <div className="h-full bg-dark rounded-2xl p-8 shadow-card border border-light/10 hover:border-primary/80 hover:scale-105 transition-all duration-300 cursor-pointer text-center">
+              <h2 className="text-3xl font-bold font-heading text-white mb-2">
+                30 Day Mental Math Challenge
               </h2>
-              <p className="text-gray-400">
-                Sharpen your mental math skills with daily challenges.
+              <p className="text-gray-400 text-lg">
+                Sharpen your mental math skills with daily challenges and quizzes.
               </p>
+              {/* Optional: Add a visual element like an icon here */}
             </div>
           </Link>
 
-          <Link href="/challenge/rules">
-            <div className="h-full bg-dark rounded-2xl p-8 shadow-card border border-light/10 hover:border-secondary/80 hover:scale-105 transition-all duration-300 cursor-pointer">
-              <h2 className="text-2xl font-bold font-heading text-white mb-2">
-                60 Day English Grammar Challenge
-              </h2>
-              <p className="text-gray-400">
-                Master the rules of English grammar with daily exercises.
-              </p>
-            </div>
-          </Link>
+          {/* REMOVED: English Grammar Challenge section */}
         </div>
       </main>
 

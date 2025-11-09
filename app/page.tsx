@@ -1,9 +1,9 @@
 'use client';
-
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { useEffect }  from 'react';
+import { useEffect } from 'react';
 import { signInWithPopup, onAuthStateChanged } from 'firebase/auth';
+// Assuming '@/lib/firebase' contains the necessary auth, db, and provider exports
 import { auth, db, provider } from '@/lib/firebase';
 import { getDoc, doc } from 'firebase/firestore';
 
@@ -51,17 +51,20 @@ export default function Home() {
             src="/logo01.png"
             width={320}
             height={160}
-            alt="QRE Mastery Logo"
+            // BRANDING CHANGE: Updated Alt Text
+            alt="Mental Math Mastery Logo"
           />
         </div>
 
         {/* Title & Tagline */}
         <h1 className="text-4xl md:text-5xl font-bold text-primary">
-          QRE Mastery
+          {/* BRANDING CHANGE: Updated App Title */}
+          Mental Math Mastery
         </h1>
         <p className="text-lg md:text-xl text-light">
-          Master Quick Calculation, Reasoning & English with short daily tasks. <br />
-          A focused, fun learning journey built for competitive minds and smart learners.
+          {/* BRANDING CHANGE: Updated Tagline for new focus */}
+          Master Quick Calculation with focused, fun daily exercises. <br />
+          Train your brain for lightning-fast mental math proficiency.
         </p>
 
         {/* Auth Buttons */}
@@ -91,4 +94,3 @@ export default function Home() {
     </main>
   );
 }
-
